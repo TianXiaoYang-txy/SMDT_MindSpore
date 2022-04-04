@@ -5,6 +5,11 @@
 ### MindSpore Version
 The repository offers the main implementation of our paper in MindSpore.
 
+#### Dependencies
+tqdm==4.9.0<br>
+matplotlib==2.1.2<br>
+mindspore==1.6.1 [https://www.mindspore.cn/install](https://www.mindspore.cn/install)
+
 ### PyTorch Version
 The PyTorch version is available at [https://github.com/TianXiaoYang-UESTC/SMDT-PyTorch](https://github.com/TianXiaoYang-UESTC/SMDT-PyTorch)
 

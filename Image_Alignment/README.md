@@ -2,7 +2,6 @@
 
 ## Contents
   - [Dataset](#Dataset)
-  - [Dependencies](#Dependencies)
   - [Semantic Segmentation](#Semantic-Segmentation)
   - [Mixed Perspective-Polar Mapping](#Mixed-Perspective-Polar-Mapping)
   - [Dual Conditional Generative Adversarial Nets](#Dual-Conditional-Generative-Adversarial-Nets)
@@ -13,11 +12,6 @@
 
 * CVUSA：[https://github.com/viibridges/crossnet](https://github.com/viibridges/crossnet)
 * CVACT：[https://github.com/Liumouliu/OriCNN](https://github.com/Liumouliu/OriCNN)
-
-## Dependencies
-tqdm==4.9.0<br>
-matplotlib==2.1.2<br>
-mindspore==1.6.1 [https://www.mindspore.cn/install](https://www.mindspore.cn/install)
 
 ## Semantic Segmentation
 After unzipping the dataset, we adopt [RefineNet](https://github.com/guosheng/refinenet) trained on CityScapes dataset for generating semantic maps and use them as training data in our experiments.
