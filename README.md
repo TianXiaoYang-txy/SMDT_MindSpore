@@ -1,4 +1,5 @@
 # SMDT-MindSpore
+## will be updated soon
 **[SMDT: Cross-View Geo-Localization with Image Alignment and Transformer.]()**  [ICME 2022]().
 
 ### MindSpore Version
