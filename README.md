@@ -18,6 +18,7 @@ The PyTorch version is available at [https://github.com/TianXiaoYang-UESTC/SMDT-
   - [Dataset](#Dataset)
   - [Image Alignment](#Image_Alignmentn)
   - [Transformer](#Transformer)
+  - [X2MindSpore](#X2MindSpore)
   - [Results](#Results)
   - [Acknowledgment](#Acknowledgment)
 
@@ -56,6 +57,11 @@ Please refer to the [Transformer](https://github.com/TianXiaoYang-UESTC/SMDT-PyT
 <center>
 <img src='./imgs/fig4.jpg' width=400>
 </center>
+
+## X2MindSpore
+The script conversion tool [X2MindSpore](https://support.huaweicloud.com/devtool-cann51RC1alpha3/atlasfmkt_16_0002.html) is used to directly convert PyTorch into MindSpore version.
+
+Please refer to the [X2MindSpore](https://github.com/TianXiaoYang-UESTC/SMDT-PyTorch/tree/main/X2MindSpore) folder for more details.
 
 ## Results
 
