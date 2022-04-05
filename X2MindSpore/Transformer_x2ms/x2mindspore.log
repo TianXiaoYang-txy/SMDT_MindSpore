@@ -1,0 +1,166 @@
+2022-04-04 14:00:09 [INFO] X2MindSpore start working now, please wait for a moment.
+2022-04-04 14:00:09 [INFO] Analysis start...
+2022-04-04 14:00:09 [INFO] x2mindspore.log is not a python script, skip.
+2022-04-04 14:00:09 [INFO] Start analysis train.py.
+2022-04-04 14:00:11 [INFO]    Line: 34     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Module" is "mindspore.nn.Cell", will be converted to "nn.Cell" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 39     ApiType: SUPPORTED                Message: The corresponding api of "torch.matmul" is "mindspore.nn.MatMul", will be converted to "x2ms_adapter.matmul" by x2mindspore.
+2022-04-04 14:00:11 [WARNING] Line: 41     ApiType: SUPPORTED_NOT_ADAPTED    Message: The corresponding api of "torch.diag" is "mindspore.nn.MatrixDiag", but has not been adapted in x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 45     ApiType: SUPPORTED                Message: The corresponding api of "torch.sum" is "mindspore.ops.ReduceSum", will be converted to "x2ms_adapter.sum" by x2mindspore.
+2022-04-04 14:00:11 [WARNING] Line: 45     ApiType: SUPPORTED_NOT_ADAPTED    Message: The corresponding api of "torch.log" is "mindspore.ops.Log", but has not been adapted in x2mindspore.
+2022-04-04 14:00:11 [WARNING] Line: 45     ApiType: SUPPORTED_NOT_ADAPTED    Message: The corresponding api of "torch.exp" is "mindspore.ops.Exp", but has not been adapted in x2mindspore.
+2022-04-04 14:00:11 [WARNING] Line: 46     ApiType: SUPPORTED_NOT_ADAPTED    Message: The corresponding api of "torch.unsqueeze" is "mindspore.ops.ExpandDims", but has not been adapted in x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 47     ApiType: SUPPORTED                Message: The corresponding api of "torch.sum" is "mindspore.ops.ReduceSum", will be converted to "x2ms_adapter.sum" by x2mindspore.
+2022-04-04 14:00:11 [WARNING] Line: 47     ApiType: SUPPORTED_NOT_ADAPTED    Message: The corresponding api of "torch.log" is "mindspore.ops.Log", but has not been adapted in x2mindspore.
+2022-04-04 14:00:11 [WARNING] Line: 47     ApiType: SUPPORTED_NOT_ADAPTED    Message: The corresponding api of "torch.exp" is "mindspore.ops.Exp", but has not been adapted in x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 85     ApiType: SUPPORTED                Message: The corresponding api of "torch.save" is "mindspore.save_checkpoint", will be converted to "x2ms_adapter.save" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 135    ApiType: SUPPORTED                Message: The corresponding api of "torch.zeros" is "mindspore.ops.Zeros", will be converted to "x2ms_adapter.zeros" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 136    ApiType: SUPPORTED                Message: The corresponding api of "torch.zeros" is "mindspore.ops.Zeros", will be converted to "x2ms_adapter.zeros" by x2mindspore.
+2022-04-04 14:00:11 [WARNING] Line: 138    ApiType: UNSUPPORTED              Message: "torch.no_grad" has no corresponding api in MindSpore, will be deleted by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 163    ApiType: SUPPORTED                Message: The corresponding api of "torch.matmul" is "mindspore.nn.MatMul", will be converted to "x2ms_adapter.matmul" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 167    ApiType: SUPPORTED                Message: The corresponding api of "torch.sum" is "mindspore.ops.ReduceSum", will be converted to "x2ms_adapter.sum" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 201    ApiType: UNSUPPORTED_ADAPTED      Message: "torch.utils.tensorboard.SummaryWriter" has no corresponding api in MindSpore, but will be converted to adapted api "util_api.SummaryWriter" by x2mindspore.
+2022-04-04 14:00:11 [WARNING] Line: 210    ApiType: SUPPORTED_NOT_ADAPTED    Message: The corresponding api of "torch.optim.AdamW" is "mindspore.nn.AdamWeightDecay", but has not been adapted in x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 223    ApiType: UNSUPPORTED_ADAPTED      Message: "apex.amp.initialize" has no corresponding api in MindSpore, but will be converted to adapted api "util_api.amp_initialize" by x2mindspore.
+2022-04-04 14:00:11 [WARNING] Line: 226    ApiType: UNSUPPORTED              Message: "apex.amp._amp_state.loss_scalers" is not supported.
+2022-04-04 14:00:11 [INFO]    Line: 234    ApiType: UNSUPPORTED_ADAPTED      Message: "torch.distributed.get_world_size" has no corresponding api in MindSpore, but will be converted to adapted api "x2ms_adapter.cuda_device_count" by x2mindspore.
+2022-04-04 14:00:11 [WARNING] Line: 270    ApiType: UNSUPPORTED              Message: "apex.amp.scale_loss" has no corresponding api in MindSpore, will be deleted by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 278    ApiType: UNSUPPORTED_ADAPTED      Message: "torch.nn.utils.clip_grad_norm_" has no corresponding api in MindSpore, but will be converted to adapted api "util_api.clip_grad_norm" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 278    ApiType: UNSUPPORTED_ADAPTED      Message: "apex.amp.master_params" has no corresponding api in MindSpore, but will be converted to adapted api "util_api.amp_master_params" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 280    ApiType: UNSUPPORTED_ADAPTED      Message: "torch.nn.utils.clip_grad_norm_" has no corresponding api in MindSpore, but will be converted to adapted api "util_api.clip_grad_norm" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 384    ApiType: UNSUPPORTED_ADAPTED      Message: "torch.device" has no corresponding api in MindSpore, but will be converted to adapted api "x2ms_adapter.Device" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 384    ApiType: UNSUPPORTED_ADAPTED      Message: "torch.cuda.is_available" has no corresponding api in MindSpore, but will be converted to adapted api "x2ms_adapter.is_cuda_available" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 385    ApiType: SUPPORTED                Message: The corresponding api of "torch.cuda.device_count" is "mindspore.communication.get_group_size", will be converted to "x2ms_adapter.cuda_device_count" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 387    ApiType: SUPPORTED                Message: The corresponding api of "torch.cuda.set_device" is "mindspore.context.set_context", will be converted to "x2ms_adapter.cuda_set_device" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 388    ApiType: UNSUPPORTED_ADAPTED      Message: "torch.device" has no corresponding api in MindSpore, but will be converted to adapted api "x2ms_adapter.Device" by x2mindspore.
+2022-04-04 14:00:11 [INFO]    Line: 389    ApiType: SUPPORTED                Message: The corresponding api of "torch.distributed.init_process_group" is "mindspore.communication.init", will be converted to "x2ms_adapter.init_process_group" by x2mindspore.
+2022-04-04 14:00:13 [WARNING] Find more than one targets.
+2022-04-04 14:00:15 [INFO] Analysis train.py complete.
+2022-04-04 14:00:15 [INFO] Start analysis test.py.
+2022-04-04 14:00:16 [INFO]    Line: 69     ApiType: UNSUPPORTED_ADAPTED      Message: "torch.device" has no corresponding api in MindSpore, but will be converted to adapted api "x2ms_adapter.Device" by x2mindspore.
+2022-04-04 14:00:16 [INFO]    Line: 69     ApiType: UNSUPPORTED_ADAPTED      Message: "torch.cuda.is_available" has no corresponding api in MindSpore, but will be converted to adapted api "x2ms_adapter.is_cuda_available" by x2mindspore.
+2022-04-04 14:00:16 [INFO]    Line: 70     ApiType: SUPPORTED                Message: The corresponding api of "torch.cuda.device_count" is "mindspore.communication.get_group_size", will be converted to "x2ms_adapter.cuda_device_count" by x2mindspore.
+2022-04-04 14:00:16 [INFO]    Line: 84     ApiType: SUPPORTED                Message: The corresponding api of "torch.load" is "mindspore.load_checkpoint", will be converted to "x2ms_adapter.load" by x2mindspore.
+2022-04-04 14:00:16 [INFO]    Line: 95     ApiType: UNSUPPORTED_ADAPTED      Message: "torch.utils.data.DataLoader" has no corresponding api in MindSpore, but will be converted to adapted api "datasets.data_loader" by x2mindspore.
+2022-04-04 14:00:16 [WARNING] Line: 113    ApiType: UNSUPPORTED              Message: "torch.no_grad" has no corresponding api in MindSpore, will be deleted by x2mindspore.
+2022-04-04 14:00:17 [INFO] Analysis test.py complete.
+2022-04-04 14:00:17 [INFO] Start analysis utils/dataloader_usa.py.
+2022-04-04 14:00:18 [WARNING] Line: 14     ApiType: SUPPORTED_NOT_ADAPTED    Message: The corresponding api of "torch.utils.data.Dataset" is "mindspore.dataset.GeneratorDataset", but has not been adapted in x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 22     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.Compose" is "mindspore.dataset.transforms.c_transforms.Compose", will be converted to "transforms.Compose" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 23     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.Resize" is "mindspore.dataset.vision.c_transforms.Resize", will be converted to "x2ms_adapter.vision_transforms.Resize" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 24     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.ToTensor" is "mindspore.dataset.vision.py_transforms.ToTensor", will be converted to "v_transforms.ToTensor" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 25     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.Normalize" is "mindspore.dataset.vision.c_transforms.Normalize", will be converted to "v_transforms.Normalize" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 27     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.Compose" is "mindspore.dataset.transforms.c_transforms.Compose", will be converted to "transforms.Compose" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 28     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.Resize" is "mindspore.dataset.vision.c_transforms.Resize", will be converted to "x2ms_adapter.vision_transforms.Resize" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 29     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.ToTensor" is "mindspore.dataset.vision.py_transforms.ToTensor", will be converted to "v_transforms.ToTensor" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 30     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.Normalize" is "mindspore.dataset.vision.c_transforms.Normalize", will be converted to "v_transforms.Normalize" by x2mindspore.
+2022-04-04 14:00:18 [WARNING] Line: 73     ApiType: SUPPORTED_NOT_ADAPTED    Message: The corresponding api of "torch.utils.data.Dataset" is "mindspore.dataset.GeneratorDataset", but has not been adapted in x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 81     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.Compose" is "mindspore.dataset.transforms.c_transforms.Compose", will be converted to "transforms.Compose" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 82     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.Resize" is "mindspore.dataset.vision.c_transforms.Resize", will be converted to "x2ms_adapter.vision_transforms.Resize" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 83     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.ToTensor" is "mindspore.dataset.vision.py_transforms.ToTensor", will be converted to "v_transforms.ToTensor" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 84     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.Normalize" is "mindspore.dataset.vision.c_transforms.Normalize", will be converted to "v_transforms.Normalize" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 86     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.Compose" is "mindspore.dataset.transforms.c_transforms.Compose", will be converted to "transforms.Compose" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 87     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.Resize" is "mindspore.dataset.vision.c_transforms.Resize", will be converted to "x2ms_adapter.vision_transforms.Resize" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 88     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.ToTensor" is "mindspore.dataset.vision.py_transforms.ToTensor", will be converted to "v_transforms.ToTensor" by x2mindspore.
+2022-04-04 14:00:18 [INFO]    Line: 89     ApiType: SUPPORTED                Message: The corresponding api of "torchvision.transforms.Normalize" is "mindspore.dataset.vision.c_transforms.Normalize", will be converted to "v_transforms.Normalize" by x2mindspore.
+2022-04-04 14:00:19 [INFO] Analysis utils/dataloader_usa.py complete.
+2022-04-04 14:00:19 [INFO] Start analysis utils/scheduler.py.
+2022-04-04 14:00:20 [INFO]    Line: 8      ApiType: UNSUPPORTED_ADAPTED      Message: "torch.optim.lr_scheduler.LambdaLR" has no corresponding api in MindSpore, but will be converted to adapted api "lr_schedule_wrapper.LambdaLR" by x2mindspore.
+2022-04-04 14:00:20 [INFO]    Line: 15     ApiType: UNSUPPORTED_ADAPTED      Message: "torch.optim.lr_scheduler.LambdaLR" has no corresponding api in MindSpore, but will be converted to adapted api "lr_schedule_wrapper.LambdaLR" by x2mindspore.
+2022-04-04 14:00:20 [INFO]    Line: 30     ApiType: UNSUPPORTED_ADAPTED      Message: "torch.optim.lr_scheduler.LambdaLR" has no corresponding api in MindSpore, but will be converted to adapted api "lr_schedule_wrapper.LambdaLR" by x2mindspore.
+2022-04-04 14:00:20 [INFO]    Line: 46     ApiType: UNSUPPORTED_ADAPTED      Message: "torch.optim.lr_scheduler.LambdaLR" has no corresponding api in MindSpore, but will be converted to adapted api "lr_schedule_wrapper.LambdaLR" by x2mindspore.
+2022-04-04 14:00:20 [INFO] Analysis utils/scheduler.py complete.
+2022-04-04 14:00:20 [INFO] Start analysis utils/dataloader_act.py.
+2022-04-04 14:00:21 [INFO]    Line: 11     ApiType: UNSUPPORTED_ADAPTED      Message: "torch.utils.data.DataLoader" has no corresponding api in MindSpore, but will be converted to adapted api "datasets.data_loader" by x2mindspore.
+2022-04-04 14:00:21 [WARNING] Line: 17     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.Compose" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 18     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.Resize" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 19     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.ToTensor" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 20     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.Normalize" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 22     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.Compose" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 23     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.Resize" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 24     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.ToTensor" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 25     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.Normalize" is not supported.
+2022-04-04 14:00:21 [INFO]    Line: 86     ApiType: UNSUPPORTED_ADAPTED      Message: "torch.utils.data.DataLoader" has no corresponding api in MindSpore, but will be converted to adapted api "datasets.data_loader" by x2mindspore.
+2022-04-04 14:00:21 [WARNING] Line: 92     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.Compose" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 93     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.Resize" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 94     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.ToTensor" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 95     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.Normalize" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 97     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.Compose" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 98     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.Resize" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 99     ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.ToTensor" is not supported.
+2022-04-04 14:00:21 [WARNING] Line: 100    ApiType: UNSUPPORTED              Message: "torchvision.transforms.transforms.Normalize" is not supported.
+2022-04-04 14:00:23 [INFO] Analysis utils/dataloader_act.py complete.
+2022-04-04 14:00:23 [INFO] Start analysis utils/data_utils.py.
+2022-04-04 14:00:23 [INFO]    Line: 24     ApiType: UNSUPPORTED_ADAPTED      Message: "torch.utils.data.DataLoader" has no corresponding api in MindSpore, but will be converted to adapted api "datasets.data_loader" by x2mindspore.
+2022-04-04 14:00:23 [INFO]    Line: 31     ApiType: UNSUPPORTED_ADAPTED      Message: "torch.utils.data.DataLoader" has no corresponding api in MindSpore, but will be converted to adapted api "datasets.data_loader" by x2mindspore.
+2022-04-04 14:00:23 [INFO] Analysis utils/data_utils.py complete.
+2022-04-04 14:00:23 [INFO] Start analysis models/modeling_resnet.py.
+2022-04-04 14:00:24 [INFO]    Line: 18     ApiType: SUPPORTED                Message: The corresponding api of "torch.from_numpy" is "mindspore.tensor.from_numpy", will be converted to "x2ms_adapter.from_numpy" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 21     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Conv2d" is "mindspore.nn.Conv2d", will be converted to "x2ms_adapter.nn.Conv2d" by x2mindspore.
+2022-04-04 14:00:24 [WARNING] Line: 25     ApiType: UNSUPPORTED              Message: "torch.var_mean" is not supported.
+2022-04-04 14:00:24 [WARNING] Line: 26     ApiType: SUPPORTED_NOT_ADAPTED    Message: The corresponding api of "torch.sqrt" is "mindspore.ops.Sqrt", but has not been adapted in x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 27     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.functional.conv2d" is "mindspore.ops.Conv2D", will be converted to "x2ms_adapter.nn_functional.conv2d" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 41     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Module" is "mindspore.nn.Cell", will be converted to "nn.Cell" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 50     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.GroupNorm" is "mindspore.nn.GroupNorm", will be converted to "x2ms_adapter.nn.GroupNorm" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 52     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.GroupNorm" is "mindspore.nn.GroupNorm", will be converted to "x2ms_adapter.nn.GroupNorm" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 54     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.GroupNorm" is "mindspore.nn.GroupNorm", will be converted to "x2ms_adapter.nn.GroupNorm" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 56     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.ReLU" is "mindspore.nn.ReLU", will be converted to "x2ms_adapter.nn.ReLU" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 61     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.GroupNorm" is "mindspore.nn.GroupNorm", will be converted to "x2ms_adapter.nn.GroupNorm" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 115    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Module" is "mindspore.nn.Cell", will be converted to "nn.Cell" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 125    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Sequential" is "mindspore.nn.SequentialCell", will be converted to "x2ms_adapter.nn.Sequential" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 127    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.GroupNorm" is "mindspore.nn.GroupNorm", will be converted to "x2ms_adapter.nn.GroupNorm" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 128    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.ReLU" is "mindspore.nn.ReLU", will be converted to "x2ms_adapter.nn.ReLU" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 129    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.MaxPool2d" is "mindspore.nn.MaxPool2d", will be converted to "x2ms_adapter.nn.MaxPool2d" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 132    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Sequential" is "mindspore.nn.SequentialCell", will be converted to "x2ms_adapter.nn.Sequential" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 133    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Sequential" is "mindspore.nn.SequentialCell", will be converted to "x2ms_adapter.nn.Sequential" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 137    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Sequential" is "mindspore.nn.SequentialCell", will be converted to "x2ms_adapter.nn.Sequential" by x2mindspore.
+2022-04-04 14:00:24 [INFO]    Line: 141    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Sequential" is "mindspore.nn.SequentialCell", will be converted to "x2ms_adapter.nn.Sequential" by x2mindspore.
+2022-04-04 14:00:26 [INFO] Analysis models/modeling_resnet.py complete.
+2022-04-04 14:00:26 [INFO] Start analysis models/configs.py.
+2022-04-04 14:00:28 [INFO] Analysis models/configs.py complete.
+2022-04-04 14:00:28 [INFO] Start analysis models/model_crossattn.py.
+2022-04-04 14:00:30 [INFO]    Line: 44     ApiType: SUPPORTED                Message: The corresponding api of "torch.from_numpy" is "mindspore.tensor.from_numpy", will be converted to "x2ms_adapter.from_numpy" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 48     ApiType: SUPPORTED                Message: The corresponding api of "torch.sigmoid" is "mindspore.ops.Sigmoid", will be converted to "x2ms_adapter.sigmoid" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 51     ApiType: UNSUPPORTED_ADAPTED      Message: "torch.nn.functional.gelu" has no corresponding api in MindSpore, but will be converted to adapted api "x2ms_adapter.nn_functional.gelu" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 51     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.functional.relu" is "mindspore.ops.ReLU", will be converted to "x2ms_adapter.nn_functional.relu" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 53     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Module" is "mindspore.nn.Cell", will be converted to "nn.Cell" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 61     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Linear" is "mindspore.nn.Dense", will be converted to "x2ms_adapter.nn.Linear" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 62     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Linear" is "mindspore.nn.Dense", will be converted to "x2ms_adapter.nn.Linear" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 63     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Linear" is "mindspore.nn.Dense", will be converted to "x2ms_adapter.nn.Linear" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 65     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Linear" is "mindspore.nn.Dense", will be converted to "x2ms_adapter.nn.Linear" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 66     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Dropout" is "mindspore.nn.Dropout", will be converted to "x2ms_adapter.nn.Dropout" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 67     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Dropout" is "mindspore.nn.Dropout", will be converted to "x2ms_adapter.nn.Dropout" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 69     ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Softmax" is "mindspore.nn.Softmax", will be converted to "x2ms_adapter.nn.Softmax" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 87     ApiType: SUPPORTED                Message: The corresponding api of "torch.matmul" is "mindspore.nn.MatMul", will be converted to "x2ms_adapter.matmul" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 93     ApiType: SUPPORTED                Message: The corresponding api of "torch.matmul" is "mindspore.nn.MatMul", will be converted to "x2ms_adapter.matmul" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 103    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Module" is "mindspore.nn.Cell", will be converted to "nn.Cell" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 106    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Linear" is "mindspore.nn.Dense", will be converted to "x2ms_adapter.nn.Linear" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 107    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Linear" is "mindspore.nn.Dense", will be converted to "x2ms_adapter.nn.Linear" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 109    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Dropout" is "mindspore.nn.Dropout", will be converted to "x2ms_adapter.nn.Dropout" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 114    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.init.xavier_uniform_" is "mindspore.common.initializer.XavierUniform", will be converted to "x2ms_adapter.nn_init.xavier_uniform_" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 115    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.init.xavier_uniform_" is "mindspore.common.initializer.XavierUniform", will be converted to "x2ms_adapter.nn_init.xavier_uniform_" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 116    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.init.normal_" is "mindspore.common.initializer.Normal", will be converted to "x2ms_adapter.nn_init.normal_" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 117    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.init.normal_" is "mindspore.common.initializer.Normal", will be converted to "x2ms_adapter.nn_init.normal_" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 128    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Module" is "mindspore.nn.Cell", will be converted to "nn.Cell" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 143    ApiType: UNSUPPORTED_ADAPTED      Message: "torch.nn.modules.utils._pair" has no corresponding api in MindSpore, but will be converted to adapted api "util_api.pair" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 152    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Conv2d" is "mindspore.nn.Conv2d", will be converted to "x2ms_adapter.nn.Conv2d" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 156    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Parameter" is "mindspore.Parameter", will be converted to "mindspore.Parameter" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 156    ApiType: SUPPORTED                Message: The corresponding api of "torch.zeros" is "mindspore.ops.Zeros", will be converted to "x2ms_adapter.zeros" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 157    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Parameter" is "mindspore.Parameter", will be converted to "mindspore.Parameter" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 157    ApiType: SUPPORTED                Message: The corresponding api of "torch.zeros" is "mindspore.ops.Zeros", will be converted to "x2ms_adapter.zeros" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 159    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Dropout" is "mindspore.nn.Dropout", will be converted to "x2ms_adapter.nn.Dropout" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 172    ApiType: SUPPORTED                Message: The corresponding api of "torch.cat" is "mindspore.ops.Concat", will be converted to "x2ms_adapter.cat" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 180    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Module" is "mindspore.nn.Cell", will be converted to "nn.Cell" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 184    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.LayerNorm" is "mindspore.nn.LayerNorm", will be converted to "x2ms_adapter.nn.LayerNorm" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 185    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.LayerNorm" is "mindspore.nn.LayerNorm", will be converted to "x2ms_adapter.nn.LayerNorm" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 186    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.LayerNorm" is "mindspore.nn.LayerNorm", will be converted to "x2ms_adapter.nn.LayerNorm" by x2mindspore.
+2022-04-04 14:00:30 [WARNING] Line: 205    ApiType: UNSUPPORTED              Message: "torch.no_grad" has no corresponding api in MindSpore, will be deleted by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 245    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Module" is "mindspore.nn.Cell", will be converted to "nn.Cell" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 249    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.ModuleList" is "mindspore.nn.CellList", will be converted to "x2ms_adapter.nn.ModuleList" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 250    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.LayerNorm" is "mindspore.nn.LayerNorm", will be converted to "x2ms_adapter.nn.LayerNorm" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 268    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Module" is "mindspore.nn.Cell", will be converted to "nn.Cell" by x2mindspore.
+2022-04-04 14:00:30 [INFO]    Line: 280    ApiType: SUPPORTED                Message: The corresponding api of "torch.nn.Module" is "mindspore.nn.Cell", will be converted to "nn.Cell" by x2mindspore.
+2022-04-04 14:00:30 [WARNING] Line: 292    ApiType: SUPPORTED_NOT_ADAPTED    Message: The corresponding api of "torch.nn.functional.normalize" is "mindspore.ops.L2Normalize", but has not been adapted in x2mindspore.
+2022-04-04 14:00:30 [WARNING] Line: 295    ApiType: UNSUPPORTED              Message: "torch.no_grad" has no corresponding api in MindSpore, will be deleted by x2mindspore.
+2022-04-04 14:00:34 [INFO] Analysis models/model_crossattn.py complete.
+2022-04-04 14:00:34 [INFO] Adapter package has been copy to the output dir, please add /root/temp/Transformer-MindSpore/Transformer_x2ms to PYTHONPATH before training.
+2022-04-04 14:00:34 [INFO] X2MindSpore run success, welcome to the next use.
