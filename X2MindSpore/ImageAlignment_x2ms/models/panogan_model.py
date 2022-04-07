@@ -2,6 +2,8 @@ from .base_model import BaseModel
 from . import networks
 from x2ms_adapter.optimizers import optim_register
 import x2ms_adapter
+import mindspore
+import mindspore.nn as nn
 
 class panoganModel(BaseModel):
     """
@@ -47,7 +49,7 @@ class panoganModel(BaseModel):
         if self.isTrain:
             # define loss functions
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
-            self.criterionL1 = torch.nn.L1Loss()
+            self.criterionL1 = nn.L1Loss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
             self.optimizer_G = optim_register.adam(x2ms_adapter.get_params(self.netG), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_D_img = optim_register.adam(x2ms_adapter.get_params(self.netD_img), lr=opt.lr, betas=(opt.beta1, 0.999))
@@ -227,12 +229,12 @@ class panoganModel(BaseModel):
         [pred_real_img, embed_real_img, pred_real_seg, embed_real_seg] = pred_embed_real
         # """
         for i in range(len(pred_fake_img)):
-            pred_fake_img[i] += x2ms_adapter.tensor_api.sum(torch.mul(embed_fake_img[i], embed_real_seg[i]), dim=1, keepdim=True)
-            pred_fake_seg[i] += x2ms_adapter.tensor_api.sum(torch.mul(embed_real_img[i], embed_fake_seg[i]), dim=1, keepdim=True)
+            pred_fake_img[i] += x2ms_adapter.tensor_api.sum(mindspore.ops.Mul(embed_fake_img[i], embed_real_seg[i]), dim=1, keepdim=True)
+            pred_fake_seg[i] += x2ms_adapter.tensor_api.sum(mindspore.ops.Mul(embed_real_img[i], embed_fake_seg[i]), dim=1, keepdim=True)
 
         if used_for_disc:
             for i in range(len(pred_fake_img)):
-                pred_real_i = x2ms_adapter.tensor_api.sum(torch.mul(embed_real_img[i], embed_real_seg[i]), dim=1, keepdim=True)
+                pred_real_i = x2ms_adapter.tensor_api.sum(mindspore.ops.Mul(embed_real_img[i], embed_real_seg[i]), dim=1, keepdim=True)
                 pred_real_img[i] += pred_real_i
                 pred_real_seg[i] += pred_real_i
 

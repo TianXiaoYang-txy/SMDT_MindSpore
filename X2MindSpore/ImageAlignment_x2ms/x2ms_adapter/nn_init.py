@@ -54,3 +54,4 @@ def kaiming_uniform_(tensor, a=0, mode='fan_in', nonlinearity='leaky_relu'):
 
 def xavier_uniform_(tensor, gain=1.0):
     return _assign_value(tensor, XavierUniform(gain=gain))
+

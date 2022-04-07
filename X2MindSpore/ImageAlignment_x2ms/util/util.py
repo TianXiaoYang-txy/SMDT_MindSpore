@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 import os
 import x2ms_adapter
-
+import mindspore
 
 def tensor2im(input_image, imtype=np.uint8):
     """"Converts a Tensor array into a numpy image array.
@@ -38,7 +38,7 @@ def diagnose_network(net, name='network'):
     count = 0
     for param in x2ms_adapter.get_params(net):
         if param.grad is not None:
-            mean += x2ms_adapter.tensor_api.mean(torch, torch.abs(param.grad.data))
+            mean += mindspore.ops.ReduceMean(mindspore.ops.Abs(param.grad.data))
             count += 1
     if count > 0:
         mean = mean / count

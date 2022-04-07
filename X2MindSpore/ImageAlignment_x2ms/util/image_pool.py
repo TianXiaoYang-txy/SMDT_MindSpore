@@ -1,6 +1,6 @@
 import random
 import x2ms_adapter
-
+import mindspore
 
 class ImagePool():
     """This class implements an image buffer that stores previously generated images.
@@ -36,7 +36,7 @@ class ImagePool():
             return images
         return_images = []
         for image in images:
-            image = torch.unsqueeze(image.data, 0)
+            image = mindspore.ops.ExpandDims(image.data, 0)
             if self.num_imgs < self.pool_size:   # if the buffer is not full; keep inserting current images to the buffer
                 self.num_imgs = self.num_imgs + 1
                 self.images.append(image)

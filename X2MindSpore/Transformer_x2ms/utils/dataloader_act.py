@@ -2,8 +2,12 @@ import os
 from PIL import Image
 import scipy.io as sio
 import argparse
-import x2ms_adapter
 import x2ms_adapter.datasets as datasets
+import mindspore.dataset.transforms.py_transforms as transforms
+import mindspore.dataset.vision.py_transforms as v_transforms
+import x2ms_adapter
+import x2ms_adapter.vision_transforms
+
 __all__ = ['TrainDataloader','TestDataloader']
 
 
@@ -14,14 +18,14 @@ class TrainDataloader(datasets.data_loader):
 
         self.img_root = args.dataset_dir 
         self.transform = transforms.Compose(
-            [transforms.Resize((args.img_size[0], args.img_size[1])),
-            transforms.ToTensor(),
-            transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225))] )
+            [x2ms_adapter.vision_transforms.Resize((args.img_size[0], args.img_size[1])),
+            v_transforms.ToTensor(),
+            v_transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225))] )
         
         self.transform_1 = transforms.Compose(
-            [transforms.Resize((256, 256)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225))] )
+            [x2ms_adapter.vision_transforms.Resize((256, 256)),
+            v_transforms.ToTensor(),
+            v_transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225))] )
 
         self.allDataList = './ACT_data.mat'
 
@@ -89,14 +93,14 @@ class TestDataloader(datasets.data_loader):
 
         self.img_root = args.dataset_dir
         self.transform = transforms.Compose(
-            [transforms.Resize((args.img_size[0], args.img_size[1])),
-            transforms.ToTensor(),
-            transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225)) ] )
+            [x2ms_adapter.vision_transforms.Resize((args.img_size[0], args.img_size[1])),
+            v_transforms.ToTensor(),
+            v_transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225)) ] )
 
         self.transform_1 = transforms.Compose(
-            [transforms.Resize((256, 256)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225))] )
+            [x2ms_adapter.vision_transforms.Resize((256, 256)),
+            v_transforms.ToTensor(),
+            v_transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225))] )
 
         self.allDataList = './ACT_data.mat'
 

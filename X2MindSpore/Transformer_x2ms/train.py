@@ -17,6 +17,7 @@ from utils.scheduler import WarmupLinearSchedule, WarmupCosineSchedule, Constant
 from utils.data_utils import get_loader
 import math
 import itertools
+import mindspore
 import mindspore.nn as nn
 import x2ms_adapter
 import x2ms_adapter.util_api as util_api
@@ -35,13 +36,13 @@ class triplet_loss(nn.Cell):
     def construct(self, grd_global, sat_global, args):
         dist_array = 2.0 - 2.0 * x2ms_adapter.matmul(sat_global, grd_global.T)
         
-        pos_dist = torch.diag(dist_array)
+        pos_dist = mindspore.nn.MatrixDiag(dist_array)
         pair_n = args.train_batch_size * (args.train_batch_size - 1.0)
 
         triplet_dist_g2s = pos_dist - dist_array
-        loss_g2s = x2ms_adapter.sum(torch.log(1.0 + torch.exp(triplet_dist_g2s * args.loss_weight)))/pair_n
-        triplet_dist_s2g = torch.unsqueeze(pos_dist, 1) - dist_array
-        loss_s2g = x2ms_adapter.sum(torch.log(1.0 + torch.exp(triplet_dist_s2g * args.loss_weight)))/pair_n
+        loss_g2s = x2ms_adapter.sum(mindspore.ops.Log(1.0 + mindspore.ops.Exp(triplet_dist_g2s * args.loss_weight)))/pair_n
+        triplet_dist_s2g = mindspore.ops.ExpandDims(pos_dist, 1) - dist_array
+        loss_s2g = x2ms_adapter.sum(mindspore.ops.Log(1.0 + mindspore.ops.Exp(triplet_dist_s2g * args.loss_weight)))/pair_n
         loss = (loss_g2s + loss_s2g) / 2.0
             
 
@@ -203,7 +204,7 @@ def train(args, model_grd, model_sat):
 
     # Prepare optimizer and scheduler
 
-    optimizer = torch.optim.AdamW(itertools.chain(x2ms_adapter.get_params(model_grd), x2ms_adapter.get_params(model_sat)),
+    optimizer = nn.AdamWeightDecay(itertools.chain(x2ms_adapter.get_params(model_grd), x2ms_adapter.get_params(model_sat)),
                                 lr=args.learning_rate,
                                 eps=1e-6,
                                 weight_decay=args.weight_decay)
@@ -265,8 +266,8 @@ def train(args, model_grd, model_sat):
 
             if args.gradient_accumulation_steps > 1:
                 loss = loss / args.gradient_accumulation_steps
-            if args.fp16:
-                scaled_loss.backward()
+            # if args.fp16:
+            #     scaled_loss.backward()
             else:
                 loss.backward()
 

@@ -288,7 +288,7 @@ class VisionTransformer(nn.Cell):
         x, attn_weights = self.transformer(x)
         out = x[:, 0]
 
-        return F.normalize(out, p=2, dim=1)
+        return mindspore.ops.L2Normalize(out, p=2, dim=1)
     
     def load_from(self, weights):
         print('loading model' )

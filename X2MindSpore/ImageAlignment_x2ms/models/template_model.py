@@ -19,7 +19,8 @@ from .base_model import BaseModel
 from . import networks
 from x2ms_adapter.optimizers import optim_register
 import x2ms_adapter
-
+import mindspore
+import mindpore.nn as nn
 
 class TemplateModel(BaseModel):
     @staticmethod
@@ -62,7 +63,7 @@ class TemplateModel(BaseModel):
         if self.isTrain:  # only defined during training time
             # define your loss functions. You can use losses provided by torch.nn such as torch.nn.L1Loss.
             # We also provide a GANLoss class "networks.GANLoss". self.criterionGAN = networks.GANLoss().to(self.device)
-            self.criterionLoss = torch.nn.L1Loss()
+            self.criterionLoss = nn.L1Loss()
             # define and initialize optimizers. You can define one optimizer for each network.
             # If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
             self.optimizer = optim_register.adam(x2ms_adapter.get_params(self.netG), lr=opt.lr, betas=(opt.beta1, 0.999))

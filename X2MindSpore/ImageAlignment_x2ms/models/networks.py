@@ -1,12 +1,14 @@
 import functools
 import numpy as np
 from x2ms_adapter.optimizers import optim_register
+import mindspore
 import mindspore.nn as nn
 import x2ms_adapter
 import x2ms_adapter.loss as loss_wrapper
 import x2ms_adapter.lr_schedulers as lr_schedule_wrapper
 import x2ms_adapter.nn
 import x2ms_adapter.nn_init
+import mindspore.dataset.vision.py_transforms as v_transforms
 
 # from DCNv2.dcn_v2 import DCN
 
@@ -92,7 +94,7 @@ def init_weights(net, init_type='normal', init_gain=0.02):
             elif init_type == 'kaiming':
                 x2ms_adapter.nn_init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')
             elif init_type == 'orthogonal':
-                init.orthogonal_(m.weight.data, gain=init_gain)
+                mindspore.common.initializer.Orthogonal(m.weight.data, gain=init_gain)
             else:
                 raise NotImplementedError('initialization method [%s] is not implemented' % init_type)
             if hasattr(m, 'bias') and m.bias is not None:
@@ -373,7 +375,7 @@ def cal_gradient_penalty(netD, real_data, fake_data, device, type='mixed', const
             raise NotImplementedError('{} not implemented'.format(type))
         interpolatesv.requires_grad_(True)
         disc_interpolates = netD(interpolatesv)
-        gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolatesv,
+        gradients = mindspore.ops.GradOperation(outputs=disc_interpolates, inputs=interpolatesv,
                                         grad_outputs=x2ms_adapter.ones(x2ms_adapter.tensor_api.size(disc_interpolates)).to(device),
                                         create_graph=True, retain_graph=True, only_inputs=True)
         gradients = gradients[0].view(x2ms_adapter.tensor_api.size(real_data, 0), -1)  # flat the data
@@ -477,7 +479,7 @@ class XFork_Shared_Decoder_Block(nn.Cell):
             else:
                 nc_input_tmp = nc_output_tmp
             nc_output_tmp = 512
-            tconv = nn.ConvTranspose2d(nc_input_tmp, nc_output_tmp, kernel_size=4, stride=2, padding=1,
+            tconv = nn.Conv2dTranspose(nc_input_tmp, nc_output_tmp, kernel_size=4, stride=2, padding=1,
                                        bias=use_bias)  #
             norm = norm_layer(nc_output_tmp)  # swap norm and act for fine-turning
             drop = x2ms_adapter.nn.Dropout(0.5)
@@ -488,7 +490,7 @@ class XFork_Shared_Decoder_Block(nn.Cell):
             out_nc_array = [512, 256, 128]
             nc_input_tmp = nc_output_tmp
             nc_output_tmp = out_nc_array[i]
-            tconv = nn.ConvTranspose2d(nc_input_tmp, nc_output_tmp, kernel_size=4, stride=2, padding=1,
+            tconv = nn.Conv2dTranspose(nc_input_tmp, nc_output_tmp, kernel_size=4, stride=2, padding=1,
                                        bias=use_bias)  # upsampling by 2 times: 64 x 256
             norm = norm_layer(nc_output_tmp)  # swap norm and act for fine-turning
             drop = x2ms_adapter.nn.Dropout(0.5)
@@ -508,7 +510,7 @@ class XFork_Separate_Decoder_Block1(nn.Cell):
         generator_block = []
         nc_input_tmp = input_nc
         nc_output_tmp = 64
-        tconv = nn.ConvTranspose2d(nc_input_tmp, nc_output_tmp, kernel_size=4, stride=2, padding=1,
+        tconv = nn.Conv2dTranspose(nc_input_tmp, nc_output_tmp, kernel_size=4, stride=2, padding=1,
                                    bias=use_bias)
         norm = norm_layer(nc_output_tmp)  # swap norm and act for fine-turning
         act = x2ms_adapter.nn.ReLU(True)
@@ -516,7 +518,7 @@ class XFork_Separate_Decoder_Block1(nn.Cell):
 
         nc_input_tmp = nc_output_tmp
         nc_output_tmp = output_nc
-        tconv = nn.ConvTranspose2d(nc_input_tmp, nc_output_tmp, kernel_size=4, stride=2, padding=1,
+        tconv = nn.Conv2dTranspose(nc_input_tmp, nc_output_tmp, kernel_size=4, stride=2, padding=1,
                                    bias=use_bias)  # upsampling by 2 times: 64 x 256
         act = nn.Tanh()
         generator_block += [tconv, act]
@@ -534,7 +536,7 @@ class XFork_Separate_Decoder_Block2(nn.Cell):
         generator_block = []
         nc_input_tmp = input_nc
         nc_output_tmp = 64
-        tconv = nn.ConvTranspose2d(nc_input_tmp, nc_output_tmp, kernel_size=4, stride=2, padding=1,
+        tconv = nn.Conv2dTranspose(nc_input_tmp, nc_output_tmp, kernel_size=4, stride=2, padding=1,
                                    bias=use_bias)
         norm = norm_layer(nc_output_tmp)  # swap norm and act for fine-turning
         act = x2ms_adapter.nn.ReLU(True)
@@ -542,7 +544,7 @@ class XFork_Separate_Decoder_Block2(nn.Cell):
 
         nc_input_tmp = nc_output_tmp
         nc_output_tmp = output_nc
-        tconv = nn.ConvTranspose2d(nc_input_tmp, nc_output_tmp, kernel_size=4, stride=2, padding=1,
+        tconv = nn.Conv2dTranspose(nc_input_tmp, nc_output_tmp, kernel_size=4, stride=2, padding=1,
                                    bias=use_bias)  # upsampling by 2 times: 64 x 256
         act = nn.Tanh()
         generator_block += [tconv, act]
@@ -599,7 +601,7 @@ class ResnetGenerator(nn.Cell):
 
         for i in range(n_downsampling):  # add upsampling layers
             mult = 2 ** (n_downsampling - i)
-            model += [nn.ConvTranspose2d(ngf * mult, int(ngf * mult / 2),
+            model += [nn.Conv2dTranspose(ngf * mult, int(ngf * mult / 2),
                                          kernel_size=3, stride=2,
                                          padding=1, output_padding=1,
                                          bias=use_bias),
@@ -704,7 +706,7 @@ class UnetAFL_4b(nn.Cell):
 
     def showtensor(self, x):
         import matplotlib.pyplot as plt
-        unloader = transforms.ToPILImage()
+        unloader = v_transforms.ToPIL()
         image = x.clone()  # we clone the tensor to not do changes on it
         image = image.squeeze(0)  # remove the fake batch dimension
         image = unloader(image)
@@ -1508,7 +1510,7 @@ class ResnetAFLGenerator(nn.Cell):
 
     def showtensor(self, x):
         import matplotlib.pyplot as plt
-        unloader = transforms.ToPILImage()
+        unloader = v_transforms.ToPIL()
         image = x.clone()  # we clone the tensor to not do changes on it
         image = image.squeeze(0)  # remove the fake batch dimension
         image = unloader(image)
@@ -1594,7 +1596,7 @@ class ResnetAFLGenerator_FAL(nn.Cell):
 
     def showtensor(self, x):
         import matplotlib.pyplot as plt
-        unloader = transforms.ToPILImage()
+        unloader = v_transforms.ToPIL()
         image = x.clone()  # we clone the tensor to not do changes on it
         image = image.squeeze(0)  # remove the fake batch dimension
         image = unloader(image)
@@ -1689,7 +1691,7 @@ class MainNet(nn.Cell):
         """
         self.decoder_layer1 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
-            nn.ConvTranspose2d(ngf * 8, ngf * 4,
+            nn.Conv2dTranspose(ngf * 8, ngf * 4,
                                kernel_size=4, stride=2,
                                padding=1, output_padding=0,
                                bias=use_bias),
@@ -1698,7 +1700,7 @@ class MainNet(nn.Cell):
         )
         self.decoder_layer2 = x2ms_adapter.nn.Sequential(
             # state size: 128
-            nn.ConvTranspose2d(ngf * 4, ngf * 2,
+            nn.Conv2dTranspose(ngf * 4, ngf * 2,
                                kernel_size=4, stride=2,
                                padding=1, output_padding=0,
                                bias=use_bias),
@@ -1707,7 +1709,7 @@ class MainNet(nn.Cell):
         )
         self.decoder_layer3 = x2ms_adapter.nn.Sequential(
             # state size: 64 channel
-            nn.ConvTranspose2d(ngf * 2, ngf * 1,
+            nn.Conv2dTranspose(ngf * 2, ngf * 1,
                                kernel_size=4, stride=2,
                                padding=1, output_padding=0,
                                bias=use_bias),
@@ -1716,7 +1718,7 @@ class MainNet(nn.Cell):
         )
         self.decoder_layer4 = x2ms_adapter.nn.Sequential(
             # state size: output_nc channel
-            nn.ConvTranspose2d(ngf, output_nc,
+            nn.Conv2dTranspose(ngf, output_nc,
                                kernel_size=4, stride=2,
                                padding=1, output_padding=0,
                                bias=use_bias),
@@ -1923,21 +1925,21 @@ class UnetSkipConnectionBlock(nn.Cell):
         upnorm = norm_layer(outer_nc)
 
         if outermost:
-            upconv = nn.ConvTranspose2d(inner_nc * 2, outer_nc,
+            upconv = nn.Conv2dTranspose(inner_nc * 2, outer_nc,
                                         kernel_size=4, stride=2,
                                         padding=1)
             down = [downconv]
             up = [uprelu, upconv, nn.Tanh()]
             model = down + [submodule] + up
         elif innermost:
-            upconv = nn.ConvTranspose2d(inner_nc, outer_nc,
+            upconv = nn.Conv2dTranspose(inner_nc, outer_nc,
                                         kernel_size=4, stride=2,
                                         padding=1, bias=use_bias)
             down = [downrelu, downconv]
             up = [uprelu, upconv, upnorm]
             model = down + up
         else:
-            upconv = nn.ConvTranspose2d(inner_nc * 2, outer_nc,
+            upconv = nn.Conv2dTranspose(inner_nc * 2, outer_nc,
                                         kernel_size=4, stride=2,
                                         padding=1, bias=use_bias)
             down = [downrelu, downconv, downnorm]
@@ -2071,7 +2073,7 @@ class UnetAFL_4a(nn.Cell):
 
     def showtensor(self, x):
         import matplotlib.pyplot as plt
-        unloader = transforms.ToPILImage()
+        unloader = v_transforms.ToPIL()
         image = x.clone()  # we clone the tensor to not do changes on it
         image = image.squeeze(0)  # remove the fake batch dimension
         image = unloader(image)
@@ -2097,7 +2099,7 @@ class UNetUp(nn.Cell):
     def __init__(self, in_size, out_size, dropout=0.0):
         super(UNetUp, self).__init__()
         layers = [
-            nn.ConvTranspose2d(in_size, out_size, 4, 2, 1, bias=True),
+            nn.Conv2dTranspose(in_size, out_size, 4, 2, 1, bias=True),
             nn.InstanceNorm2d(out_size),
             x2ms_adapter.nn.ReLU(inplace=True),
         ]

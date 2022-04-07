@@ -85,7 +85,7 @@ def get_params(opt, size):
 def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, convert=True):
     transform_list = []
     if grayscale:
-        transform_list.append(transforms.Grayscale(1))
+        transform_list.append(v_transforms.Grayscale(1))
     if 'resize' in opt.preprocess:
         osize = [opt.load_size, opt.load_size]
         transform_list.append(x2ms_adapter.vision_transforms.Resize(osize, method))
@@ -118,7 +118,7 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
 def get_transform_pano(opt, params=None, grayscale=False, method=Image.BICUBIC, convert=True):
     transform_list = []
     if grayscale:
-        transform_list.append(transforms.Grayscale(1))
+        transform_list.append(v_transforms.Grayscale(1))
 
     if 'resize' in opt.preprocess:
         if params is None:
@@ -172,7 +172,7 @@ def get_transform_pano_new(opt, params=None, grayscale=False, method=Image.BICUB
                 transform_list.append(transforms.Lambda(lambda img: __crop(img, params['crop_pos'], opt.crop_size)))
 
     if grayscale:
-        transform_list.append(transforms.Grayscale(1))
+        transform_list.append(v_transforms.Grayscale(1))
     if opt.preprocess == 'none':
         transform_list.append(transforms.Lambda(lambda img: __make_power_2(img, base=4, method=method)))
     if not opt.no_flip:

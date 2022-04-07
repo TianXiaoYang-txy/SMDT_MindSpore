@@ -3,13 +3,14 @@ from PIL import Image
 
 import scipy.io as sio
 import argparse
+import x2ms_adapter.datasets as datasets
 import mindspore.dataset.transforms.py_transforms as transforms
 import mindspore.dataset.vision.py_transforms as v_transforms
 import x2ms_adapter
 import x2ms_adapter.vision_transforms
 
 
-class TrainDataloader:
+class TrainDataloader(datasets.data_loader):
     def __init__(self, args):
         
         self.polar = args.polar
@@ -68,7 +69,7 @@ class TrainDataloader:
     def __len__(self):
         return len(self.id_list)
 
-class TestDataloader:
+class TestDataloader(datasets.data_loader):
     def __init__(self, args):
         print(args.polar)
         self.polar = args.polar

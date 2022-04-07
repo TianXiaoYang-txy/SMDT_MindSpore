@@ -14,7 +14,7 @@ import x2ms_adapter.datasets as datasets
 
 
 #from utils.dataloader_act import TestDataloader
-os.environ['CUDA_VISIBLE_DEVICES'] = '6'
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
 
 def validate(dist_array, top_k):

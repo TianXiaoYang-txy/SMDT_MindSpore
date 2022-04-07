@@ -5,6 +5,7 @@ import math
 from os.path import join as pjoin
 
 from collections import OrderedDict  # pylint: disable=g-importing-member
+import mindspore
 import mindspore.nn as nn
 import x2ms_adapter
 import x2ms_adapter.nn
@@ -22,8 +23,10 @@ class StdConv2d(x2ms_adapter.nn.Conv2d):
 
     def construct(self, x):
         w = self.weight
-        v, m = torch.var_mean(w, dim=[1, 2, 3], keepdim=True, unbiased=False)
-        w = (w - m) / torch.sqrt(v + 1e-5)
+        # v, m = torch.var_mean(w, dim=[1, 2, 3], keepdim=True, unbiased=False)
+        v = mindspore.Tensor.var(w, dim=[1, 2, 3], keepdim=True, unbiased=False)
+        m = mindspore.ops.ReduceMean(w, dim=[1, 2, 3], keepdim=True, unbiased=False)
+        w = (w - m) / mindspore.ops.Sqrt(v + 1e-5)
         return x2ms_adapter.nn_functional.conv2d(x, w, self.bias, self.stride, self.padding,
                         self.dilation, self.groups)
 
