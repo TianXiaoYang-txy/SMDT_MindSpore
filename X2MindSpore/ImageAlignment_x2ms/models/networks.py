@@ -9,13 +9,162 @@ import x2ms_adapter.lr_schedulers as lr_schedule_wrapper
 import x2ms_adapter.nn
 import x2ms_adapter.nn_init
 import mindspore.dataset.vision.py_transforms as v_transforms
+import math
 
 # from DCNv2.dcn_v2 import DCN
 
 ###############################################################################
 # Helper Functions
 ###############################################################################
+class ReduceLROnPlateau(object):
+    def __init__(self, optimizer, mode='min', factor=0.1, patience=10,
+                 threshold=1e-4, threshold_mode='rel', cooldown=0,
+                 min_lr=0., eps=1e-8, verbose=False):
 
+        if factor >= 1.0:
+            raise ValueError('Factor should be < 1.0.')
+        self.factor = factor
+
+        # Attach optimizer
+        # if not isinstance(optimizer, Optimizer):
+        #     raise TypeError('{} is not an Optimizer'.format(
+        #         type(optimizer).__name__))
+        self.optimizer = optimizer
+
+        if isinstance(min_lr, list) or isinstance(min_lr, tuple):
+            if len(min_lr) != len(optimizer.param_groups):
+                raise ValueError("expected {} min_lrs, got {}".format(
+                    len(optimizer.param_groups), len(min_lr)))
+            self.min_lrs = list(min_lr)
+        else:
+            self.min_lrs = [min_lr] * len(optimizer.param_groups)
+
+        self.patience = patience
+        self.verbose = verbose
+        self.cooldown = cooldown
+        self.cooldown_counter = 0
+        self.mode = mode
+        self.threshold = threshold
+        self.threshold_mode = threshold_mode
+        self.best = None
+        self.num_bad_epochs = None
+        self.mode_worse = None  # the worse value for the chosen mode
+        self.eps = eps
+        self.last_epoch = 0
+        self._init_is_better(mode=mode, threshold=threshold,
+                             threshold_mode=threshold_mode)
+        self._reset()
+
+    def _reset(self):
+        """Resets num_bad_epochs counter and cooldown counter."""
+        self.best = self.mode_worse
+        self.cooldown_counter = 0
+        self.num_bad_epochs = 0
+
+    def step(self, metrics, epoch=None):
+        # convert `metrics` to float, in case it's a zero-dim Tensor
+        current = float(metrics)
+        if epoch is None:
+            epoch = self.last_epoch + 1
+        # else:
+        #     warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+        self.last_epoch = epoch
+
+        if self.is_better(current, self.best):
+            self.best = current
+            self.num_bad_epochs = 0
+        else:
+            self.num_bad_epochs += 1
+
+        if self.in_cooldown:
+            self.cooldown_counter -= 1
+            self.num_bad_epochs = 0  # ignore any bad epochs in cooldown
+
+        if self.num_bad_epochs > self.patience:
+            self._reduce_lr(epoch)
+            self.cooldown_counter = self.cooldown
+            self.num_bad_epochs = 0
+
+        self._last_lr = [group['lr'] for group in self.optimizer.param_groups]
+
+    def _reduce_lr(self, epoch):
+        for i, param_group in enumerate(self.optimizer.param_groups):
+            old_lr = float(param_group['lr'])
+            new_lr = max(old_lr * self.factor, self.min_lrs[i])
+            if old_lr - new_lr > self.eps:
+                param_group['lr'] = new_lr
+                if self.verbose:
+                    print('Epoch {:5d}: reducing learning rate'
+                          ' of group {} to {:.4e}.'.format(epoch, i, new_lr))
+
+    @property
+    def in_cooldown(self):
+        return self.cooldown_counter > 0
+
+    def is_better(self, a, best):
+        if self.mode == 'min' and self.threshold_mode == 'rel':
+            rel_epsilon = 1. - self.threshold
+            return a < best * rel_epsilon
+
+        elif self.mode == 'min' and self.threshold_mode == 'abs':
+            return a < best - self.threshold
+
+        elif self.mode == 'max' and self.threshold_mode == 'rel':
+            rel_epsilon = self.threshold + 1.
+            return a > best * rel_epsilon
+
+        else:  # mode == 'max' and epsilon_mode == 'abs':
+            return a > best + self.threshold
+
+    def _init_is_better(self, mode, threshold, threshold_mode):
+        if mode not in {'min', 'max'}:
+            raise ValueError('mode ' + mode + ' is unknown!')
+        if threshold_mode not in {'rel', 'abs'}:
+            raise ValueError('threshold mode ' + threshold_mode + ' is unknown!')
+
+        # if mode == 'min':
+        #     self.mode_worse = inf
+        # else:  # mode == 'max':
+        #     self.mode_worse = -inf
+
+        self.mode = mode
+        self.threshold = threshold
+        self.threshold_mode = threshold_mode
+
+    def state_dict(self):
+        return {key: value for key, value in self.__dict__.items() if key != 'optimizer'}
+
+    def load_state_dict(self, state_dict):
+        self.__dict__.update(state_dict)
+        self._init_is_better(mode=self.mode, threshold=self.threshold, threshold_mode=self.threshold_mode)
+
+
+def _no_grad_normal_(tensor, mean, std):
+    return tensor.normal_(mean, std)
+
+def _calculate_fan_in_and_fan_out(tensor):
+    dimensions = tensor.dim()
+    if dimensions < 2:
+        raise ValueError("Fan in and fan out can not be computed for tensor with fewer than 2 dimensions")
+
+    num_input_fmaps = x2ms_adapter.tensor_api.size(tensor, 1)
+    num_output_fmaps = x2ms_adapter.tensor_api.size(tensor, 0)
+    receptive_field_size = 1
+    if tensor.dim() > 2:
+        # math.prod is not always available, accumulate the product manually
+        # we could use functools.reduce but that is not supported by TorchScript
+        for s in tensor.shape[2:]:
+            receptive_field_size *= s
+    fan_in = num_input_fmaps * receptive_field_size
+    fan_out = num_output_fmaps * receptive_field_size
+
+    return fan_in, fan_out
+
+def xavier_normal_(tensor, gain: float = 1.) -> x2ms_adapter.Tensor:
+    fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor)
+    std = gain * math.sqrt(2.0 / float(fan_in + fan_out))
+
+    return _no_grad_normal_(tensor, 0., std)
 
 class Identity(nn.Cell):
     def construct(self, x):
@@ -64,7 +213,7 @@ def get_scheduler(optimizer, opt):
     elif opt.lr_policy == 'step':
         scheduler = lr_schedule_wrapper.StepLR(optimizer, step_size=opt.lr_decay_iters, gamma=0.1)
     elif opt.lr_policy == 'plateau':
-        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.2, threshold=0.01, patience=5)
+        scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.2, threshold=0.01, patience=5)
     elif opt.lr_policy == 'cosine':
         scheduler = lr_schedule_wrapper.CosineAnnealingLR(optimizer, T_max=opt.niter, eta_min=0)
     else:
@@ -90,7 +239,7 @@ def init_weights(net, init_type='normal', init_gain=0.02):
             if init_type == 'normal':
                 x2ms_adapter.nn_init.normal_(m.weight.data, 0.0, init_gain)
             elif init_type == 'xavier':
-                init.xavier_normal_(m.weight.data, gain=init_gain)
+                xavier_normal_(m.weight.data, gain=init_gain)
             elif init_type == 'kaiming':
                 x2ms_adapter.nn_init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')
             elif init_type == 'orthogonal':
@@ -581,7 +730,7 @@ class ResnetGenerator(nn.Cell):
         else:
             use_bias = norm_layer == nn.InstanceNorm2d
 
-        model = [nn.ReflectionPad2d(3),
+        model = [nn.Pad(3, mode="REFLECT"),
                  x2ms_adapter.nn.Conv2d(input_nc, ngf, kernel_size=7, padding=0, bias=use_bias),
                  norm_layer(ngf),
                  x2ms_adapter.nn.ReLU(True)]
@@ -607,7 +756,7 @@ class ResnetGenerator(nn.Cell):
                                          bias=use_bias),
                       norm_layer(int(ngf * mult / 2)),
                       x2ms_adapter.nn.ReLU(True)]
-        model += [nn.ReflectionPad2d(3)]
+        model += [nn.Pad(3, mode="REFLECT")]
         model += [x2ms_adapter.nn.Conv2d(ngf, output_nc, kernel_size=7, padding=0)]
         model += [nn.Tanh()]
 
@@ -793,7 +942,7 @@ class BasicUNetGenerator_4b(nn.Cell):
         self.decoder_layer1 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             norm_layer(ngf_out),
             x2ms_adapter.nn.ReLU(True)
@@ -806,7 +955,7 @@ class BasicUNetGenerator_4b(nn.Cell):
         self.decoder_layer2 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             norm_layer(ngf_out),
             x2ms_adapter.nn.ReLU(True)
@@ -819,7 +968,7 @@ class BasicUNetGenerator_4b(nn.Cell):
         self.decoder_layer3 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             norm_layer(ngf_out),
             x2ms_adapter.nn.ReLU(True)
@@ -831,7 +980,7 @@ class BasicUNetGenerator_4b(nn.Cell):
         self.decoder_layer4 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             nn.Tanh()
         )
@@ -950,7 +1099,7 @@ class UnetAFL_v3(nn.Cell):
         self.decoder_layer1 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             norm_layer(ngf_out),
             x2ms_adapter.nn.ReLU(True)
@@ -964,7 +1113,7 @@ class UnetAFL_v3(nn.Cell):
         self.decoder_layer2 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             norm_layer(ngf_out),
             x2ms_adapter.nn.ReLU(True)
@@ -978,7 +1127,7 @@ class UnetAFL_v3(nn.Cell):
         self.decoder_layer3 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             norm_layer(ngf_out),
             x2ms_adapter.nn.ReLU(True)
@@ -991,7 +1140,7 @@ class UnetAFL_v3(nn.Cell):
         self.decoder_layer4 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             nn.Tanh()
         )
@@ -1172,7 +1321,7 @@ class UnetAFL_v5(nn.Cell):
         self.decoder_layer1 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             norm_layer(ngf_out),
             x2ms_adapter.nn.ReLU(True)
@@ -1186,7 +1335,7 @@ class UnetAFL_v5(nn.Cell):
         self.decoder_layer2 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             norm_layer(ngf_out),
             x2ms_adapter.nn.ReLU(True)
@@ -1200,7 +1349,7 @@ class UnetAFL_v5(nn.Cell):
         self.decoder_layer3 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             norm_layer(ngf_out),
             x2ms_adapter.nn.ReLU(True)
@@ -1213,7 +1362,7 @@ class UnetAFL_v5(nn.Cell):
         self.decoder_layer4 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             nn.Tanh()
         )
@@ -1395,7 +1544,7 @@ class panoGAN_baseline_G(nn.Cell):
         self.decoder_layer1 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             norm_layer(ngf_out),
             x2ms_adapter.nn.ReLU(True)
@@ -1409,7 +1558,7 @@ class panoGAN_baseline_G(nn.Cell):
         self.decoder_layer2 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             norm_layer(ngf_out),
             x2ms_adapter.nn.ReLU(True)
@@ -1423,7 +1572,7 @@ class panoGAN_baseline_G(nn.Cell):
         self.decoder_layer3 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             norm_layer(ngf_out),
             x2ms_adapter.nn.ReLU(True)
@@ -1436,7 +1585,7 @@ class panoGAN_baseline_G(nn.Cell):
         self.decoder_layer4 = x2ms_adapter.nn.Sequential(
             # state size: 256 channel
             x2ms_adapter.nn.Upsample(scale_factor=2, mode='nearest'),
-            nn.ReflectionPad2d(1),
+            nn.Pad(1, mode="REFLECT"),
             x2ms_adapter.nn.Conv2d(ngf_in, ngf_out, kernel_size=3, stride=1, padding=0, bias=use_bias),
             nn.Tanh()
         )
@@ -1815,15 +1964,15 @@ class ResnetBlock(nn.Cell):
             norm_layer          -- normalization layer
             use_dropout (bool)  -- if use dropout layers.
             use_bias (bool)     -- if the conv layer uses bias or not
-
+nn.Pad
         Returns a conv block (with a conv layer, a normalization layer, and a non-linearity layer (ReLU))
         """
         conv_block = []
         p = 0
         if padding_type == 'reflect':
-            conv_block += [nn.ReflectionPad2d(1)]
+            conv_block += [nn.Pad(1, mode="REFLECT")]
         elif padding_type == 'replicate':
-            conv_block += [nn.ReplicationPad2d(1)]
+            conv_block += [nn.Pad(1, mode="SYMMETRIC")]
         elif padding_type == 'zero':
             p = 1
         else:
@@ -1835,9 +1984,9 @@ class ResnetBlock(nn.Cell):
 
         p = 0
         if padding_type == 'reflect':
-            conv_block += [nn.ReflectionPad2d(1)]
+            conv_block += [nn.Pad(1, mode="REFLECT")]
         elif padding_type == 'replicate':
-            conv_block += [nn.ReplicationPad2d(1)]
+            conv_block += [nn.Pad(1, mode="SYMMETRIC")]
         elif padding_type == 'zero':
             p = 1
         else:

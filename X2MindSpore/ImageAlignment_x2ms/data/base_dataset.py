@@ -90,22 +90,22 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
         osize = [opt.load_size, opt.load_size]
         transform_list.append(x2ms_adapter.vision_transforms.Resize(osize, method))
     elif 'scale_width' in opt.preprocess:
-        transform_list.append(transforms.Lambda(lambda img: __scale_width(img, opt.load_size, method)))
+        transform_list.append(opt.map(lambda img: __scale_width(img, opt.load_size, method)))
 
     if 'crop' in opt.preprocess:
         if params is None:
             transform_list.append(v_transforms.RandomCrop(opt.crop_size))
         else:
-            transform_list.append(transforms.Lambda(lambda img: __crop(img, params['crop_pos'], opt.crop_size)))
+            transform_list.append(opt.map(lambda img: __crop(img, params['crop_pos'], opt.crop_size)))
 
     if opt.preprocess == 'none':
-        transform_list.append(transforms.Lambda(lambda img: __make_power_2(img, base=4, method=method)))
+        transform_list.append(opt.map(lambda img: __make_power_2(img, base=4, method=method)))
 
     if not opt.no_flip:
         if params is None:
             transform_list.append(v_transforms.RandomHorizontalFlip())
         elif params['flip']:
-            transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
+            transform_list.append(opt.map(lambda img: __flip(img, params['flip'])))
 
     if convert:
         transform_list += [v_transforms.ToTensor()]
@@ -127,7 +127,7 @@ def get_transform_pano(opt, params=None, grayscale=False, method=Image.BICUBIC, 
             osize = [params['new_h'], params['new_w']]
         transform_list.append(x2ms_adapter.vision_transforms.Resize(osize, method))
     elif 'scale_width' in opt.preprocess:
-        transform_list.append(transforms.Lambda(lambda img: __scale_width(img, opt.load_size, method)))
+        transform_list.append(opt.map(lambda img: __scale_width(img, opt.load_size, method)))
 
     if 'crop' in opt.preprocess:
         osize = [opt.crop_size, opt.crop_size * 4]
@@ -135,16 +135,16 @@ def get_transform_pano(opt, params=None, grayscale=False, method=Image.BICUBIC, 
             transform_list.append(v_transforms.RandomCrop(osize))
         else:
             transform_list.append(v_transforms.RandomCrop(osize))
-            #transform_list.append(transforms.Lambda(lambda img: __crop_pano(img, params['crop_pos'], osize)))
+            #transform_list.append(opt.map(lambda img: __crop_pano(img, params['crop_pos'], osize)))
     #"""
     if opt.preprocess == 'none':
-        transform_list.append(transforms.Lambda(lambda img: __make_power_2(img, base=4, method=method)))
+        transform_list.append(opt.map(lambda img: __make_power_2(img, base=4, method=method)))
 
     if not opt.no_flip:
         if params is None:
             transform_list.append(v_transforms.RandomHorizontalFlip())
         elif params['flip']:
-            transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
+            transform_list.append(opt.map(lambda img: __flip(img, params['flip'])))
 
     if convert:
         transform_list.append(v_transforms.ToTensor())
@@ -163,23 +163,23 @@ def get_transform_pano_new(opt, params=None, grayscale=False, method=Image.BICUB
             osize = [opt.load_size, opt.load_size]
             transform_list.append(x2ms_adapter.vision_transforms.Resize(osize, method))
         elif 'scale_width' in opt.preprocess:
-            transform_list.append(transforms.Lambda(lambda img: __scale_width(img, opt.load_size, method)))
+            transform_list.append(opt.map(lambda img: __scale_width(img, opt.load_size, method)))
 
         if 'crop' in opt.preprocess:
             if params is None:
                 transform_list.append(v_transforms.RandomCrop(opt.crop_size))
             else:
-                transform_list.append(transforms.Lambda(lambda img: __crop(img, params['crop_pos'], opt.crop_size)))
+                transform_list.append(opt.map(lambda img: __crop(img, params['crop_pos'], opt.crop_size)))
 
     if grayscale:
         transform_list.append(v_transforms.Grayscale(1))
     if opt.preprocess == 'none':
-        transform_list.append(transforms.Lambda(lambda img: __make_power_2(img, base=4, method=method)))
+        transform_list.append(opt.map(lambda img: __make_power_2(img, base=4, method=method)))
     if not opt.no_flip:
         if params is None:
             transform_list.append(v_transforms.RandomHorizontalFlip())
         elif params['flip']:
-            transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
+            transform_list.append(opt.map(lambda img: __flip(img, params['flip'])))
     if convert:
         transform_list += [v_transforms.ToTensor()]
         if grayscale:
