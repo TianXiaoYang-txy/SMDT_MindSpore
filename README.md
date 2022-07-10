@@ -61,8 +61,6 @@ Please refer to the [Transformer](https://github.com/TianXiaoYang-UESTC/SMDT-Min
 ## X2MindSpore
 The script conversion tool [X2MindSpore](https://support.huaweicloud.com/devtool-cann51RC1alpha3/atlasfmkt_16_0002.html) is used to directly convert PyTorch into MindSpore version.
 
-Please refer to the [X2MindSpore](https://github.com/TianXiaoYang-UESTC/SMDT-MindSpore/tree/main/X2MindSpore) folder for more details.
-
 ## Results
 
 #### Results on CVUSA
