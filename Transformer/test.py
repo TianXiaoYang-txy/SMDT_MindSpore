@@ -1,23 +1,20 @@
 import os
-# import torch
-# import torch.nn as nn
 import numpy as np
-import mindspore
+
 
 from utils.data_utils import get_loader
-# from torch.utils.data import DataLoader
 from tqdm import tqdm
-# from apex import amp
 import scipy.io as scio
-# import torch.nn.functional as F
 import argparse
 
 from models.model_crossattn import VisionTransformer, CONFIGS
+import x2ms_adapter
+import x2ms_adapter.datasets as datasets
 #from utils.data_utils import get_loader
 
 
 #from utils.dataloader_act import TestDataloader
-os.environ['CUDA_VISIBLE_DEVICES'] = '6'
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
 
 def validate(dist_array, top_k):
@@ -25,7 +22,7 @@ def validate(dist_array, top_k):
     data_amount = 0.0
     for i in range(dist_array.shape[0]):
         gt_dist = dist_array[i,i]
-        prediction = np.sum(dist_array[:, i] < gt_dist)
+        prediction = x2ms_adapter.tensor_api.sum(np, dist_array[:, i] < gt_dist)
         if prediction < top_k:
             accuracy += 1.0
         data_amount += 1.0
@@ -66,10 +63,9 @@ parser.add_argument("--eval_batch_size", default=32, type=int,
 args = parser.parse_args()
 
 
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# args.n_gpu = mindspore.communication.get_group_size()
-# args.device = device
-mindspore.context.set_context(device_target="GPU",device_id=0)
+device = x2ms_adapter.Device("cuda" if x2ms_adapter.is_cuda_available() else "cpu")
+args.n_gpu = x2ms_adapter.cuda_device_count()
+args.device = device
 
 
 config = CONFIGS[args.model_type]
@@ -82,9 +78,9 @@ model_sat = VisionTransformer(config, args.img_size_sat)
 
 print("loading model form ", os.path.join(args.output_dir,'model_grd_checkpoint.pth'))
 
-state_dict = mindspore.load_checkpoint(os.path.join(args.output_dir,'model_checkpoint.pth'))
-model_grd.load_state_dict(state_dict['model_grd'])
-model_sat.load_state_dict(state_dict['model_sat'])
+state_dict = x2ms_adapter.load(os.path.join(args.output_dir,'model_checkpoint.pth'),map_location='cpu')
+x2ms_adapter.load_state_dict(model_grd, state_dict['model_grd'])
+x2ms_adapter.load_state_dict(model_sat, state_dict['model_sat'])
 
 
 if args.dataset == 'CVUSA':
@@ -92,13 +88,13 @@ if args.dataset == 'CVUSA':
 elif args.dataset == 'CVACT':
     from utils.dataloader_act import TestDataloader
 
-# testset = TestDataloader(args)
-# test_loader = DataLoader(testset,
-#                         batch_size=args.eval_batch_size,
-#                         shuffle=False,
-#                         num_workers=4)
-testset = TestDataloader()
-test_loader = testset
+testset = TestDataloader(args)
+test_loader = datasets.data_loader(testset,
+                        batch_size=args.eval_batch_size,
+                        shuffle=False, 
+                        num_workers=4)
+
+
 
 model_grd.to(device)
 model_sat.to(device)
@@ -107,26 +103,23 @@ sat_global_descriptor = np.zeros([8884, 768])
 grd_global_descriptor = np.zeros([8884, 768])
 val_i =0
 
-model_grd.eval()
-model_sat.eval()
+model_grd.set_train(False)
+model_sat.set_train(False)
+for step, batch in enumerate(tqdm(test_loader)):
+    x_grd, x_sat = batch
+    if step == 1:
+        print(x_grd.shape, x_sat.shape)
 
+    x_grd=x_grd.to(args.device)
+    x_sat=x_sat.to(args.device)
 
-with mindspore.ops.stop_gradient():
-    for step, batch in enumerate(tqdm(test_loader)):
-        x_grd, x_sat = batch
-        if step == 1:
-            print(x_grd.shape, x_sat.shape)
+    grd_global = model_grd(x_grd)
+    sat_global = model_sat(x_sat)
 
-        x_grd=x_grd.to(args.device)
-        x_sat=x_sat.to(args.device)
+    sat_global_descriptor[val_i: val_i + sat_global.shape[0], :] = sat_global.numpy()
+    grd_global_descriptor[val_i: val_i + grd_global.shape[0], :] = grd_global.numpy()
 
-        grd_global = model_grd(x_grd)
-        sat_global = model_sat(x_sat)
-
-        sat_global_descriptor[val_i: val_i + sat_global.shape[0], :] = sat_global.detach().cpu().numpy()
-        grd_global_descriptor[val_i: val_i + grd_global.shape[0], :] = grd_global.detach().cpu().numpy()
-
-        val_i += sat_global.shape[0]
+    val_i += sat_global.shape[0]
 
 
 print('   compute accuracy')

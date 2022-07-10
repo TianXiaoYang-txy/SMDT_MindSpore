@@ -1,34 +1,31 @@
 import os
-# from torch.utils.data import DataLoader
-# from torchvision.transforms import transforms
-import mindspore
-import mindspore.dataset
-import mindspore.dataset.vision
-import mindspore.dataset.transforms
-
 from PIL import Image
 import scipy.io as sio
-# import torchvision
 import argparse
+import x2ms_adapter.datasets as datasets
+import mindspore.dataset.transforms.py_transforms as transforms
+import mindspore.dataset.vision.py_transforms as v_transforms
+import x2ms_adapter
+import x2ms_adapter.vision_transforms
+
 __all__ = ['TrainDataloader','TestDataloader']
 
 
-class TrainDataloader:
+class TrainDataloader(datasets.data_loader):
     def __init__(self, args):
 
         self.polar = args.polar
 
         self.img_root = args.dataset_dir 
-
-        self.transform = mindspore.dataset.transforms.c_transforms.Compose(
-            [mindspore.dataset.vision.c_transforms.Resize((args.img_size[0], args.img_size[1])),
-            mindspore.dataset.vision.py_transforms.ToTensor(),
-            mindspore.dataset.vision.c_transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225)) ] )
-
-        self.transform_1 = mindspore.dataset.transforms.c_transforms.Compose(
-            [mindspore.dataset.vision.c_transforms.Resize((256, 256)),
-            mindspore.dataset.vision.py_transforms.ToTensor(),
-            mindspore.dataset.vision.c_transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225))] )
+        self.transform = transforms.Compose(
+            [x2ms_adapter.vision_transforms.Resize((args.img_size[0], args.img_size[1])),
+            v_transforms.ToTensor(),
+            v_transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225))] )
+        
+        self.transform_1 = transforms.Compose(
+            [x2ms_adapter.vision_transforms.Resize((256, 256)),
+            v_transforms.ToTensor(),
+            v_transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225))] )
 
         self.allDataList = './ACT_data.mat'
 
@@ -89,21 +86,21 @@ class TrainDataloader:
         return len(self.trainList)
 
 
-class TestDataloader:
+class TestDataloader(datasets.data_loader):
     def __init__(self, args):
 
         self.polar = args.polar
 
         self.img_root = args.dataset_dir
-        self.transform = mindspore.dataset.transforms.c_transforms.Compose(
-            [mindspore.dataset.vision.c_transforms.Resize((args.img_size[0], args.img_size[1])),
-            mindspore.dataset.vision.py_transforms.ToTensor(),
-            mindspore.dataset.vision.c_transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225)) ] )
+        self.transform = transforms.Compose(
+            [x2ms_adapter.vision_transforms.Resize((args.img_size[0], args.img_size[1])),
+            v_transforms.ToTensor(),
+            v_transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225)) ] )
 
-        self.transform_1 = mindspore.dataset.transforms.c_transforms.Compose(
-            [mindspore.dataset.vision.c_transforms.Resize((256, 256)),
-            mindspore.dataset.vision.py_transforms.ToTensor(),
-            mindspore.dataset.vision.c_transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225))] )
+        self.transform_1 = transforms.Compose(
+            [x2ms_adapter.vision_transforms.Resize((256, 256)),
+            v_transforms.ToTensor(),
+            v_transforms.Normalize(mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225))] )
 
         self.allDataList = './ACT_data.mat'
 

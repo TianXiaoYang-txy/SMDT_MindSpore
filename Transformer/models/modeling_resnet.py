@@ -5,30 +5,31 @@ import math
 from os.path import join as pjoin
 
 from collections import OrderedDict  # pylint: disable=g-importing-member
-
-# import torch
-# import torch.nn as nn
-# import torch.nn.functional as F
-
 import mindspore
-import mindspore.nn
+import mindspore.nn as nn
+import mindspore.ops as ops
+import x2ms_adapter
+import x2ms_adapter.nn
+import x2ms_adapter.nn_functional
+
 
 def np2th(weights, conv=False):
     """Possibly convert HWIO to OIHW."""
     if conv:
-        weights = weights.transpose([3, 2, 0, 1])
-    return mindspore.tensor.from_numpy(weights)
+        weights = x2ms_adapter.tensor_api.transpose(weights, [3, 2, 0, 1])
+    return x2ms_adapter.from_numpy(weights)
 
 
-class StdConv2d(mindspore.nn.Conv2d):
+class StdConv2d(x2ms_adapter.nn.Conv2d):
 
-    def forward(self, x):
+    def construct(self, x):
         w = self.weight
         # v, m = torch.var_mean(w, dim=[1, 2, 3], keepdim=True, unbiased=False)
-        v = mindspore.Tensor.var(w, dim=[1, 2, 3], keepdim=True, unbiased=False)
-        m = mindspore.ops.ReduceMean(w, dim=[1, 2, 3], keepdim=True, unbiased=False)
-        w = (w - m) / mindspore.ops.Sqrt(v + 1e-5)
-        return mindspore.ops.Conv2D(x, w, self.bias, self.stride, self.padding,
+        v = w.var(dim=[1, 2, 3], keepdim=True, unbiased=False)
+        m = ops.ReduceMean(w, dim=[1, 2, 3], keepdim=True, unbiased=False)
+        sqrt = ops.Sqrt()
+        w = (w - m) / sqrt(v + 1e-5)
+        return x2ms_adapter.nn_functional.conv2d(x, w, self.bias, self.stride, self.padding,
                         self.dilation, self.groups)
 
 
@@ -42,7 +43,7 @@ def conv1x1(cin, cout, stride=1, bias=False):
                      padding=0, bias=bias)
 
 
-class PreActBottleneck(mindspore.nn.Cell):
+class PreActBottleneck(nn.Cell):
     """Pre-activation (v2) bottleneck block.
     """
 
@@ -51,20 +52,20 @@ class PreActBottleneck(mindspore.nn.Cell):
         cout = cout or cin
         cmid = cmid or cout//4
 
-        self.gn1 = mindspore.nn.GroupNorm(32, cmid, eps=1e-6)
+        self.gn1 = x2ms_adapter.nn.GroupNorm(32, cmid, eps=1e-6)
         self.conv1 = conv1x1(cin, cmid, bias=False)
-        self.gn2 = mindspore.nn.GroupNorm(32, cmid, eps=1e-6)
+        self.gn2 = x2ms_adapter.nn.GroupNorm(32, cmid, eps=1e-6)
         self.conv2 = conv3x3(cmid, cmid, stride, bias=False)  # Original code has it on conv1!!
-        self.gn3 = mindspore.nn.GroupNorm(32, cout, eps=1e-6)
+        self.gn3 = x2ms_adapter.nn.GroupNorm(32, cout, eps=1e-6)
         self.conv3 = conv1x1(cmid, cout, bias=False)
-        self.relu = mindspore.nn.ReLU(inplace=True)
+        self.relu = x2ms_adapter.nn.ReLU(inplace=True)
 
         if (stride != 1 or cin != cout):
             # Projection also with pre-activation according to paper.
             self.downsample = conv1x1(cin, cout, stride, bias=False)
-            self.gn_proj = mindspore.nn.GroupNorm(cout, cout)
+            self.gn_proj = x2ms_adapter.nn.GroupNorm(cout, cout)
 
-    def forward(self, x):
+    def construct(self, x):
 
         # Residual branch
         residual = x
@@ -116,7 +117,7 @@ class PreActBottleneck(mindspore.nn.Cell):
             self.gn_proj.weight.copy_(proj_gn_weight.view(-1))
             self.gn_proj.bias.copy_(proj_gn_bias.view(-1))
 
-class ResNetV2(mindspore.nn.Cell):
+class ResNetV2(nn.Cell):
     """Implementation of Pre-activation (v2) ResNet mode."""
 
     def __init__(self, block_units, width_factor):
@@ -126,29 +127,29 @@ class ResNetV2(mindspore.nn.Cell):
 
         # The following will be unreadable if we split lines.
         # pylint: disable=line-too-long
-        self.root = mindspore.nn.SequentialCell(OrderedDict([
+        self.root = x2ms_adapter.nn.Sequential(OrderedDict([
             ('conv', StdConv2d(3, width, kernel_size=7, stride=2, bias=False, padding=3)),
-            ('gn', mindspore.nn.GroupNorm(32, width, eps=1e-6)),
-            ('relu', mindspore.nn.ReLU(inplace=True)),
-            ('pool', mindspore.nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
+            ('gn', x2ms_adapter.nn.GroupNorm(32, width, eps=1e-6)),
+            ('relu', x2ms_adapter.nn.ReLU(inplace=True)),
+            ('pool', x2ms_adapter.nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
         ]))
 
-        self.body = mindspore.nn.SequentialCell(OrderedDict([
-            ('block1', mindspore.nn.SequentialCell(OrderedDict(
+        self.body = x2ms_adapter.nn.Sequential(OrderedDict([
+            ('block1', x2ms_adapter.nn.Sequential(OrderedDict(
                 [('unit1', PreActBottleneck(cin=width, cout=width*4, cmid=width))] +
                 [(f'unit{i:d}', PreActBottleneck(cin=width*4, cout=width*4, cmid=width)) for i in range(2, block_units[0] + 1)],
                 ))),
-            ('block2', mindspore.nn.SequentialCell(OrderedDict(
+            ('block2', x2ms_adapter.nn.Sequential(OrderedDict(
                 [('unit1', PreActBottleneck(cin=width*4, cout=width*8, cmid=width*2, stride=2))] +
                 [(f'unit{i:d}', PreActBottleneck(cin=width*8, cout=width*8, cmid=width*2)) for i in range(2, block_units[1] + 1)],
                 ))),    
-            ('block3', mindspore.nn.SequentialCell(OrderedDict(
+            ('block3', x2ms_adapter.nn.Sequential(OrderedDict(
                 [('unit1', PreActBottleneck(cin=width*8, cout=width*16, cmid=width*4, stride=2))] +
                 [(f'unit{i:d}', PreActBottleneck(cin=width*16, cout=width*16, cmid=width*4)) for i in range(2, block_units[2] + 1)],
                 ))),
         ]))
 
-    def forward(self, x):
+    def construct(self, x):
         x = self.root(x)
         x = self.body(x)
         return x

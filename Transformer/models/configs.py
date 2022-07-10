@@ -1,5 +1,6 @@
 
 import ml_collections
+import x2ms_adapter
 
 
 def get_testing():

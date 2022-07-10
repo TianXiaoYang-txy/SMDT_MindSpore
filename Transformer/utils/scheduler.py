@@ -1,20 +1,19 @@
 import logging
 import math
-import mindspore
-
-# from torch.optim.lr_scheduler import LambdaLR
-import mindspore.nn.learning_rate_schedule
+from x2ms_adapter.optimizers import optim_register
+import x2ms_adapter
+import x2ms_adapter.lr_schedulers as lr_schedule_wrapper
 
 logger = logging.getLogger(__name__)
 
-class ConstantLRSchedule():
+class ConstantLRSchedule(lr_schedule_wrapper.LambdaLR):
     """ Constant learning rate schedule.
     """
     def __init__(self, optimizer, last_epoch=-1):
         super(ConstantLRSchedule, self).__init__(optimizer, lambda _: 1.0, last_epoch=last_epoch)
 
 
-class WarmupConstantSchedule():
+class WarmupConstantSchedule(lr_schedule_wrapper.LambdaLR):
     """ Linear warmup and then constant.
         Linearly increases learning rate schedule from 0 to 1 over `warmup_steps` training steps.
         Keeps learning rate schedule equal to 1. after warmup_steps.
@@ -29,7 +28,7 @@ class WarmupConstantSchedule():
         return 1.
 
 
-class WarmupLinearSchedule():
+class WarmupLinearSchedule(lr_schedule_wrapper.LambdaLR):
     """ Linear warmup and then linear decay.
         Linearly increases learning rate from 0 to 1 over `warmup_steps` training steps.
         Linearly decreases learning rate from 1. to 0. over remaining `t_total - warmup_steps` steps.
@@ -45,7 +44,7 @@ class WarmupLinearSchedule():
         return max(0.0, float(self.t_total - step) / float(max(1.0, self.t_total - self.warmup_steps)))
 
 
-class WarmupCosineSchedule():
+class WarmupCosineSchedule(lr_schedule_wrapper.LambdaLR):
     """ Linear warmup and then cosine decay.
         Linearly increases learning rate from 0 to 1 over `warmup_steps` training steps.
         Decreases learning rate from 1. to 0. over remaining `t_total - warmup_steps` steps following a cosine curve.

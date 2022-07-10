@@ -9,15 +9,7 @@ import numpy as np
 
 from datetime import timedelta
 
-import mindspore
-import mindspore.nn
-# import torch
-# import torch.nn as nn
-# import torch.distributed as dist
-
 from tqdm import tqdm
-# from torch.utils.tensorboard import SummaryWriter
-# from apex import amp
 
 from models.model_crossattn import VisionTransformer, CONFIGS
 
@@ -25,30 +17,34 @@ from utils.scheduler import WarmupLinearSchedule, WarmupCosineSchedule, Constant
 from utils.data_utils import get_loader
 import math
 import itertools
+import mindspore
+import mindspore.nn as nn
+import mindspore.ops as ops
+import x2ms_adapter
+import x2ms_adapter.util_api as util_api
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '3'
-
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 logger = logging.getLogger(__name__)
 
-
-
-class triplet_loss(mindspore.nn.Cell):
+class triplet_loss(nn.Cell):
     def __init__(self):
         super().__init__()
     
-    def forward(self, grd_global, sat_global, args):
-        dist_array = 2.0 - 2.0 * mindspore.nn.MatMul(sat_global, grd_global.T)
-        
-        pos_dist = mindspore.nn.MatrixDiag(dist_array)
+    def construct(self, grd_global, sat_global, args):
+        dist_array = 2.0 - 2.0 * x2ms_adapter.matmul(sat_global, grd_global.T)
+        matrix_diag = nn.MatrixDiag()
+        pos_dist = matrix_diag(dist_array)
         pair_n = args.train_batch_size * (args.train_batch_size - 1.0)
 
         triplet_dist_g2s = pos_dist - dist_array
-        loss_g2s = mindspore.ops.ReduceSum(mindspore.ops.Log(1.0 + mindspore.ops.Exp(triplet_dist_g2s * args.loss_weight)))/pair_n
-        triplet_dist_s2g = mindspore.ops.ExpandDims(pos_dist, 1) - dist_array
-        loss_s2g = mindspore.ops.ReduceSum(mindspore.ops.Log(1.0 + mindspore.ops.Exp(triplet_dist_s2g * args.loss_weight)))/pair_n
+        log = ops.Log()
+        exp = ops.Exp()
+        loss_g2s = x2ms_adapter.sum(log(1.0 + exp(triplet_dist_g2s * args.loss_weight)))/pair_n
+        expand_dims = ops.ExpandDims()
+        triplet_dist_s2g = expand_dims(pos_dist, 1) - dist_array
+        loss_s2g = x2ms_adapter.sum(log(1.0 + exp(triplet_dist_s2g * args.loss_weight)))/pair_n
         loss = (loss_g2s + loss_s2g) / 2.0
-            
 
         return loss
 
@@ -73,18 +69,18 @@ class AverageMeter(object):
 
 
 def simple_accuracy(preds, labels):
-    return (preds == labels).mean()
+    return x2ms_adapter.tensor_api.mean((preds == labels))
 
 
 def save_model(args, model_grd, model_sat,optimizer):
 
     model_checkpoint = os.path.join(args.output_dir, "model_checkpoint.pth")
     checkpoint = {
-        'model_grd':model_grd.state_dict(),
-        'model_sat':model_sat.state_dict(),
-        'optimizer': optimizer.state_dict()
+        'model_grd':x2ms_adapter.state_dict(model_grd),
+        'model_sat':x2ms_adapter.state_dict(model_sat),
+        'optimizer': x2ms_adapter.state_dict(optimizer)
     }
-    mindspore.save_checkpoint(checkpoint, model_checkpoint)
+    x2ms_adapter.save(checkpoint, model_checkpoint)
     
     logger.info("Saved model checkpoint to [DIR: %s]", args.output_dir)
 
@@ -112,7 +108,7 @@ def setup(args):
 
 
 def count_parameters(model):
-    params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    params = sum(x2ms_adapter.tensor_api.numel(p) for p in x2ms_adapter.get_params(model) if p.requires_grad)
     return params/1000000
 
 
@@ -124,8 +120,8 @@ def valid(args, model_grd, model_sat, writer, test_loader, global_step):
     logger.info("  Num steps = %d", len(test_loader))
     logger.info("  Batch size = %d", args.eval_batch_size)
 
-    model_grd.eval()
-    model_sat.eval()
+    model_grd.set_train(False)
+    model_sat.set_train(False)
     epoch_iterator = tqdm(test_loader,
                           desc="Validating... (loss=X.X)",
                           bar_format="{l_bar}{r_bar}",
@@ -134,39 +130,38 @@ def valid(args, model_grd, model_sat, writer, test_loader, global_step):
 
     loss_fct = triplet_loss()
 
-    sat_global_descriptor = mindspore.ops.Zeros([8884, 768]).to(args.device)
-    grd_global_descriptor = mindspore.ops.Zeros([8884, 768]).to(args.device)
+    sat_global_descriptor = x2ms_adapter.zeros([8884, 768]).to(args.device)
+    grd_global_descriptor = x2ms_adapter.zeros([8884, 768]).to(args.device)
     val_i =0
-    with mindspore.ops.stop_gradient():
-        for step, (x_grd, x_sat) in enumerate(epoch_iterator):
+    for step, (x_grd, x_sat) in enumerate(epoch_iterator):
         
-            x_grd=x_grd.to(args.device)
-            x_sat=x_sat.to(args.device)
-            
-            grd_global = model_grd(x_grd)
-            sat_global = model_sat(x_sat)
+        x_grd=x_grd.to(args.device)
+        x_sat=x_sat.to(args.device)
+        
+        grd_global = model_grd(x_grd)
+        sat_global = model_sat(x_sat)
 
 
-            eval_loss = loss_fct(grd_global, sat_global, args)
-            eval_losses.update(eval_loss.item())
+        eval_loss = loss_fct(grd_global, sat_global, args)
+        eval_losses.update(x2ms_adapter.tensor_api.item(eval_loss))
 
-            sat_global_descriptor[val_i: val_i + sat_global.shape[0], :] = sat_global.detach().cpu()
-            grd_global_descriptor[val_i: val_i + grd_global.shape[0], :] = grd_global.detach().cpu()
-            val_i += sat_global.shape[0]
+        sat_global_descriptor[val_i: val_i + sat_global.shape[0], :] = sat_global
+        grd_global_descriptor[val_i: val_i + grd_global.shape[0], :] = grd_global
+        val_i += sat_global.shape[0]
 
         
-            epoch_iterator.set_description("Validating... (loss=%2.5f)" % eval_losses.val)
+        epoch_iterator.set_description("Validating... (loss=%2.5f)" % eval_losses.val)
 
     print('   compute accuracy')
     accuracy_1 = 0.0
     accuracy_5 = 0.0
 
     data_amount = 0.0
-    dist_array = 2.0 - 2.0 * mindspore.nn.MatMul(sat_global_descriptor, grd_global_descriptor.T)
+    dist_array = 2.0 - 2.0 * x2ms_adapter.matmul(sat_global_descriptor, grd_global_descriptor.T)
     print('start')
     for i in range(dist_array.shape[0]):
         gt_dist = dist_array[i, i]
-        prediction = mindspore.ops.ReduceSum(dist_array[:, i] < gt_dist)
+        prediction = x2ms_adapter.sum(dist_array[:, i] < gt_dist)
         if prediction < 1:
             accuracy_1 += 1.0
         if prediction < 5:
@@ -200,7 +195,7 @@ def train(args, model_grd, model_sat):
     """ Train the model """
     if args.local_rank in [-1, 0]:
         os.makedirs(args.output_dir, exist_ok=True)
-        writer = SummaryWriter(log_dir=os.path.join("logs", args.name))
+        writer = util_api.SummaryWriter(log_dir=os.path.join("logs", args.name))
 
     args.train_batch_size = args.train_batch_size // args.gradient_accumulation_steps
 
@@ -209,8 +204,8 @@ def train(args, model_grd, model_sat):
 
     # Prepare optimizer and scheduler
 
-    optimizer = mindspore.nn.AdamWeightDecay(itertools.chain(model_grd.parameters(), model_sat.parameters()),
-                                lr=args.learning_rate,
+    optimizer = nn.AdamWeightDecay(itertools.chain(x2ms_adapter.get_params(model_grd), x2ms_adapter.get_params(model_sat)),
+                                learning_rate=args.learning_rate,
                                 eps=1e-6,
                                 weight_decay=args.weight_decay)
                     
@@ -222,10 +217,9 @@ def train(args, model_grd, model_sat):
         scheduler = WarmupLinearSchedule(optimizer, warmup_steps=args.warmup_steps, t_total=t_total)
     
     if args.fp16:
-        [model_grd, model_sat], optimizer = amp.initialize(models=[model_grd,model_sat],
+        [model_grd, model_sat], optimizer = util_api.amp_initialize(models=[model_grd,model_sat],
                                           optimizers=optimizer,
                                           opt_level=args.fp16_opt_level)
-        amp._amp_state.loss_scalers[0]._loss_scale = 2**20
 
     # Train!
     logger.info("***** Running training *****")
@@ -233,7 +227,7 @@ def train(args, model_grd, model_sat):
     logger.info("  Instantaneous batch size per GPU = %d", args.train_batch_size)
     logger.info("  Total train batch size (w. parallel, distributed & accumulation) = %d",
                 args.train_batch_size * args.gradient_accumulation_steps * (
-                    torch.distributed.get_world_size() if args.local_rank != -1 else 1))
+                    x2ms_adapter.cuda_device_count() if args.local_rank != -1 else 1))
     logger.info("  Gradient Accumulation steps = %d", args.gradient_accumulation_steps)
 
     # loss function
@@ -247,8 +241,12 @@ def train(args, model_grd, model_sat):
 
 
     while True:
-        model_grd.train()
-        model_sat.train()
+        model_grd.set_train()
+        "WITH_LOSS_CELL_PLACEHOLDER"
+        "TRAIN_ONE_STEP_CELL_PLACEHOLDER"
+        model_sat.set_train()
+        "WITH_LOSS_CELL_PLACEHOLDER"
+        "TRAIN_ONE_STEP_CELL_PLACEHOLDER"
 
         epoch_iterator = tqdm(train_loader,
                               desc="Training (X / X Steps) (loss=X.X)",
@@ -268,18 +266,17 @@ def train(args, model_grd, model_sat):
 
             if args.gradient_accumulation_steps > 1:
                 loss = loss / args.gradient_accumulation_steps
-            if args.fp16:
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
+            # if args.fp16:
+            #     scaled_loss.backward()
             else:
                 loss.backward()
 
             if (step + 1) % args.gradient_accumulation_steps == 0:
-                losses.update(loss.item()*args.gradient_accumulation_steps)
+                losses.update(x2ms_adapter.tensor_api.item(loss)*args.gradient_accumulation_steps)
                 if args.fp16:
-                    torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
+                    util_api.clip_grad_norm(util_api.amp_master_params(optimizer), args.max_grad_norm)
                 else:
-                    torch.nn.utils.clip_grad_norm_(list(model_grd.parameters())+list(model_sat.parameters()), args.max_grad_norm)
+                    util_api.clip_grad_norm(list(x2ms_adapter.get_params(model_grd))+list(x2ms_adapter.get_params(model_sat)), args.max_grad_norm)
                 optimizer.step()
                 scheduler.step()
                 
@@ -302,8 +299,12 @@ def train(args, model_grd, model_sat):
                         save_model(args, model_grd, model_sat,optimizer)
                         best_acc = accuracy
 
-                    model_grd.train()
-                    model_sat.train()
+                    model_grd.set_train()
+                    "WITH_LOSS_CELL_PLACEHOLDER"
+                    "TRAIN_ONE_STEP_CELL_PLACEHOLDER"
+                    model_sat.set_train()
+                    "WITH_LOSS_CELL_PLACEHOLDER"
+                    "TRAIN_ONE_STEP_CELL_PLACEHOLDER"
 
                 if global_step % t_total == 0:
                     break
@@ -382,27 +383,23 @@ def main():
     args = parser.parse_args()
 
     # Setup CUDA, GPU & distributed training
-    device = mindspore.context.set_context(device_target='GPU', device_id=2)
-    # if args.local_rank == -1:
-    #     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    #     device = mindspore.context.set_context(device_target='GPU', device_id=2)
-    #     args.n_gpu = mindspore.communication.get_group_size()
-    #
-    # else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
-    #     mindspore.context.set_context(args.local_rank)
-    #     # device = torch.device("cuda", args.local_rank)
-    #     device = mindspore.context.set_context(device_target='GPU', device_id=2)
-    #     mindspore.communication.init(backend='nccl',
-    #                                          timeout=timedelta(minutes=60))
-    #     args.n_gpu = 1
+    if args.local_rank == -1:
+        device = x2ms_adapter.Device("cuda" if x2ms_adapter.is_cuda_available() else "cpu")
+        args.n_gpu = x2ms_adapter.cuda_device_count()
+    else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
+        x2ms_adapter.cuda_set_device(args.local_rank)
+        device = x2ms_adapter.Device("cuda", args.local_rank)
+        x2ms_adapter.init_process_group(backend='nccl',
+                                             timeout=timedelta(minutes=60))
+        args.n_gpu = 1
     args.device = device
 
     # Setup logging
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                         datefmt='%m/%d/%Y %H:%M:%S',
                         level=logging.INFO if args.local_rank in [-1, 0] else logging.WARN)
-    # logger.warning("Process rank: %s, device: %s, n_gpu: %s, distributed training: %s, 16-bits training: %s" %
-    #                (args.local_rank, args.device, args.n_gpu, bool(args.local_rank != -1), args.fp16))
+    logger.warning("Process rank: %s, device: %s, n_gpu: %s, distributed training: %s, 16-bits training: %s" %
+                   (args.local_rank, args.device, args.n_gpu, bool(args.local_rank != -1), args.fp16))
 
 
     # Model & Tokenizer Setup
