@@ -11,7 +11,7 @@ matplotlib==2.1.2<br>
 mindspore==1.6.1 [Install](https://www.mindspore.cn/install)
 
 ### PyTorch Version
-The PyTorch version is available at [https://github.com/TianXiaoYang-UESTC/SMDT-PyTorch](https://github.com/TianXiaoYang-UESTC/SMDT-PyTorch)
+The PyTorch version is available at [https://github.com/TianXiaoYang-txy/SMDT_PyTorch](https://github.com/TianXiaoYang-txy/SMDT_PyTorch)
 
 ## Contents
   - [Abstract](#Abstract)
@@ -32,7 +32,7 @@ The goal of cross-view geo-localization is to determine the location of a given 
 
 ## Image Alignment
 
-Please refer to the [Image_Alignment](https://github.com/TianXiaoYang-UESTC/SMDT-MindSpore/tree/main/Image_Alignment) folder for more details.
+Please refer to the [Image_Alignment](https://github.com/TianXiaoYang-txy/SMDT_MindSpore/tree/main/Image_Alignment) folder for more details.
 
 #### Semantic Segmentation
 <center>
@@ -51,7 +51,7 @@ Please refer to the [Image_Alignment](https://github.com/TianXiaoYang-UESTC/SMDT
 
 ## Transformer
 
-Please refer to the [Transformer](https://github.com/TianXiaoYang-UESTC/SMDT-MindSpore/tree/main/Transformer) folder for more details.
+Please refer to the [Transformer](https://github.com/TianXiaoYang-txy/SMDT_MindSpore/tree/main/Transformer) folder for more details.
 
 #### Transformer for Cross-View Geo-localization
 <center>
@@ -74,4 +74,4 @@ The script conversion tool [X2MindSpore](https://support.huaweicloud.com/devtool
 </center>
 
 ## Acknowledgment
-This source code of Image Alignment is inspired by [PanoGAN](https://github.com/sswuai/PanoGAN), the source code of Transformer is inspired by [Polar-EgoTR](https://github.com/yanghongji2007/cross_view_localization_L2LTR)
+This source code of Image Alignment is inspired by [PanoGAN](https://github.com/sswuai/PanoGAN), the source code of Transformer is inspired by [Polar-EgoTR](https://github.com/yanghongji2007/cross_view_localization_L2LTR)# SMDT_MindSpore
