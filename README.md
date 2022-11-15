@@ -75,3 +75,4 @@ The script conversion tool [X2MindSpore](https://support.huaweicloud.com/devtool
 
 ## Acknowledgment
 This source code of Image Alignment is inspired by [PanoGAN](https://github.com/sswuai/PanoGAN), the source code of Transformer is inspired by [Polar-EgoTR](https://github.com/yanghongji2007/cross_view_localization_L2LTR)# SMDT_MindSpore
+# SMDT_MindSpore
