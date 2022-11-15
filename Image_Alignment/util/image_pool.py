@@ -2,7 +2,7 @@ import random
 import x2ms_adapter
 import mindspore.ops as ops
 import mindspore
-
+#1
 class ImagePool():
     """This class implements an image buffer that stores previously generated images.
 

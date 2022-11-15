@@ -9,7 +9,7 @@ import mindspore.dataset.vision.py_transforms as v_transforms
 import x2ms_adapter
 import x2ms_adapter.vision_transforms
 
-
+#1
 class TrainDataloader(datasets.data_loader):
     def __init__(self, args):
         

@@ -7,7 +7,7 @@ from zipfile import ZipFile
 from bs4 import BeautifulSoup
 from os.path import abspath, isdir, join, basename
 
-
+#1
 class GetData(object):
     """A Python script for downloading CycleGAN or pix2pix datasets.
 

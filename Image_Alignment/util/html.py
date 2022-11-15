@@ -1,7 +1,7 @@
 import dominate
 from dominate.tags import meta, h3, table, tr, td, p, a, img, br
 import os
-
+#1
 
 class HTML:
     """This HTML class allows us to save images and write texts into a single HTML file.

@@ -1,7 +1,7 @@
 
 """Bottleneck ResNet v2 with GroupNorm and Weight Standardization."""
 import math
-
+#1
 from os.path import join as pjoin
 
 from collections import OrderedDict  # pylint: disable=g-importing-member

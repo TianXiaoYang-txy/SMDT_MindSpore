@@ -6,7 +6,7 @@ import os
 import x2ms_adapter
 import mindspore
 import mindspore.ops as ops
-
+#1
 def tensor2im(input_image, imtype=np.uint8):
     """"Converts a Tensor array into a numpy image array.
 

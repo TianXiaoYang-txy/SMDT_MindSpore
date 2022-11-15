@@ -8,7 +8,7 @@ from subprocess import Popen, PIPE
 #from scipy.misc import imresize
 from PIL import Image
 import x2ms_adapter
-
+#1
 
 if sys.version_info[0] == 2:
     VisdomExceptionBase = Exception
