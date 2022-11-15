@@ -1,5 +1,5 @@
 """Model class template
-
+#1
 This module provides a template for users to implement custom models.
 You can specify '--model template' to use this model.
 The class name should be consistent with both the filename and its model option.

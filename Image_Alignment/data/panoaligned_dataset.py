@@ -5,7 +5,7 @@ from PIL import Image
 import random
 import mindspore.dataset.vision.py_transforms as v_transforms
 import x2ms_adapter
-
+#1
 class PanoAlignedDataset(BaseDataset):
     """A dataset class for paired image dataset.
 

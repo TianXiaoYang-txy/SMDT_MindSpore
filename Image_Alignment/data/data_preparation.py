@@ -1,5 +1,5 @@
 import numpy as np
-# from scipy.misc import imread, imsave
+# from scipy.misc import imread, imsave1
 from imageio import imread, imsave
 import os
 

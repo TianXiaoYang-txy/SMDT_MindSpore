@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from . import networks
 import x2ms_adapter
 
-
+#1
 class BaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
     To create a subclass, you need to implement the following five functions:

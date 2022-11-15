@@ -5,7 +5,7 @@ import x2ms_adapter
 import mindspore
 import mindspore.nn as nn
 import mindspore.ops as ops
-
+#1
 class panoganModel(BaseModel):
     """
         PanoGAN model
